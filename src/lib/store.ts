@@ -150,7 +150,10 @@ export const todayKey = () => new Date().toISOString().slice(0, 10);
 
 export function setDay(date: string, entry: Partial<DayEntry>) {
   setState((s) => ({
-    days: { ...s.days, [date]: { status: "present", ...s.days[date], ...entry } },
+    days: {
+      ...s.days,
+      [date]: { status: "present" as const, ...(s.days[date] ?? {}), ...entry },
+    },
   }));
 }
 
