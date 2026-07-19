@@ -22,7 +22,7 @@ const PATTERNS = {
 function RelaxationPage() {
   const [pattern, setPattern] = useState<keyof typeof PATTERNS>("box");
   const [phase, setPhase] = useState<Phase>("in");
-  const [count, setCount] = useState(PATTERNS.box.in);
+  const [count, setCount] = useState<number>(PATTERNS.box.in);
   const [running, setRunning] = useState(true);
 
   useEffect(() => {

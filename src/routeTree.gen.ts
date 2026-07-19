@@ -9,8 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as RelaxationRouteImport } from './routes/relaxation'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as JourneyRouteImport } from './routes/journey'
+import { Route as JournalRouteImport } from './routes/journal'
+import { Route as AffirmationsRouteImport } from './routes/affirmations'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelaxationRoute = RelaxationRouteImport.update({
+  id: '/relaxation',
+  path: '/relaxation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyRoute = JourneyRouteImport.update({
+  id: '/journey',
+  path: '/journey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JournalRoute = JournalRouteImport.update({
+  id: '/journal',
+  path: '/journal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AffirmationsRoute = AffirmationsRouteImport.update({
+  id: '/affirmations',
+  path: '/affirmations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +55,116 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/affirmations': typeof AffirmationsRoute
+  '/journal': typeof JournalRoute
+  '/journey': typeof JourneyRoute
+  '/onboarding': typeof OnboardingRoute
+  '/relaxation': typeof RelaxationRoute
+  '/tools': typeof ToolsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/affirmations': typeof AffirmationsRoute
+  '/journal': typeof JournalRoute
+  '/journey': typeof JourneyRoute
+  '/onboarding': typeof OnboardingRoute
+  '/relaxation': typeof RelaxationRoute
+  '/tools': typeof ToolsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/affirmations': typeof AffirmationsRoute
+  '/journal': typeof JournalRoute
+  '/journey': typeof JourneyRoute
+  '/onboarding': typeof OnboardingRoute
+  '/relaxation': typeof RelaxationRoute
+  '/tools': typeof ToolsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/affirmations'
+    | '/journal'
+    | '/journey'
+    | '/onboarding'
+    | '/relaxation'
+    | '/tools'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/affirmations'
+    | '/journal'
+    | '/journey'
+    | '/onboarding'
+    | '/relaxation'
+    | '/tools'
+  id:
+    | '__root__'
+    | '/'
+    | '/affirmations'
+    | '/journal'
+    | '/journey'
+    | '/onboarding'
+    | '/relaxation'
+    | '/tools'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AffirmationsRoute: typeof AffirmationsRoute
+  JournalRoute: typeof JournalRoute
+  JourneyRoute: typeof JourneyRoute
+  OnboardingRoute: typeof OnboardingRoute
+  RelaxationRoute: typeof RelaxationRoute
+  ToolsRoute: typeof ToolsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relaxation': {
+      id: '/relaxation'
+      path: '/relaxation'
+      fullPath: '/relaxation'
+      preLoaderRoute: typeof RelaxationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey': {
+      id: '/journey'
+      path: '/journey'
+      fullPath: '/journey'
+      preLoaderRoute: typeof JourneyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journal': {
+      id: '/journal'
+      path: '/journal'
+      fullPath: '/journal'
+      preLoaderRoute: typeof JournalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/affirmations': {
+      id: '/affirmations'
+      path: '/affirmations'
+      fullPath: '/affirmations'
+      preLoaderRoute: typeof AffirmationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +177,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AffirmationsRoute: AffirmationsRoute,
+  JournalRoute: JournalRoute,
+  JourneyRoute: JourneyRoute,
+  OnboardingRoute: OnboardingRoute,
+  RelaxationRoute: RelaxationRoute,
+  ToolsRoute: ToolsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
