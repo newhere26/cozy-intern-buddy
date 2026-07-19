@@ -17,14 +17,18 @@ function Home() {
   const app = useApp();
   const nav = useNavigate();
   const [openTile, setOpenTile] = useState<"cal" | "well" | "proc" | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !app.onboarded) {
-      nav({ to: "/onboarding" });
-    }
+    setMounted(true);
+    if (!app.onboarded) nav({ to: "/onboarding" });
   }, [app.onboarded, nav]);
 
-  const greeting = pickGreeting();
+  const greeting = mounted ? pickGreeting() : "";
+
+  if (!mounted || !app.onboarded) {
+    return <div className="min-h-svh bg-background" />;
+  }
 
   return (
     <AppShell>
