@@ -149,12 +149,14 @@ export function useApp(): AppState {
 export const todayKey = () => new Date().toISOString().slice(0, 10);
 
 export function setDay(date: string, entry: Partial<DayEntry>) {
-  setState((s) => ({
-    days: {
-      ...s.days,
-      [date]: { status: "present" as const, ...(s.days[date] ?? {}), ...entry },
-    },
-  }));
+  setState((s) => {
+    const prev = s.days[date];
+    const next: DayEntry = {
+      status: entry.status ?? prev?.status ?? "present",
+      night: entry.night ?? prev?.night,
+    };
+    return { days: { ...s.days, [date]: next } };
+  });
 }
 
 export function addProcedure(p: Omit<ProcedureLog, "id">) {
