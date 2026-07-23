@@ -210,6 +210,21 @@ export function setRating(date: string, r: number) {
   setState((s) => ({ ratings: { ...s.ratings, [date]: r } }));
 }
 
+export function addTodo(text: string) {
+  const t = text.trim();
+  if (!t) return;
+  setState((s) => ({ todos: [{ id: crypto.randomUUID(), text: t, done: false }, ...s.todos] }));
+}
+export function toggleTodo(id: string) {
+  setState((s) => ({ todos: s.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) }));
+}
+export function toggleTodoRemind(id: string) {
+  setState((s) => ({ todos: s.todos.map((t) => (t.id === id ? { ...t, remind: !t.remind } : t)) }));
+}
+export function removeTodo(id: string) {
+  setState((s) => ({ todos: s.todos.filter((t) => t.id !== id) }));
+}
+
 export function resetAll() {
   state = defaultState;
   persist();
