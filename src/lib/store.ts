@@ -44,6 +44,13 @@ export interface JournalEntry {
   procedureIds?: string[];
 }
 
+export interface Todo {
+  id: string;
+  text: string;
+  done: boolean;
+  remind?: boolean;
+}
+
 export interface AppState {
   onboarded: boolean;
   name: string;
@@ -64,6 +71,7 @@ export interface AppState {
   water: Record<string, number>;
   journal: JournalEntry[];
   ratings: Record<string, number>;
+  todos: Todo[];
 }
 
 const KEY = "serenity.v1";
@@ -88,6 +96,7 @@ const defaultState: AppState = {
   water: {},
   journal: [],
   ratings: {},
+  todos: [],
 };
 
 let state: AppState = load();
