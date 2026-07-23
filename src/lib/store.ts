@@ -44,6 +44,13 @@ export interface JournalEntry {
   procedureIds?: string[];
 }
 
+export interface Todo {
+  id: string;
+  text: string;
+  done: boolean;
+  remind?: boolean;
+}
+
 export interface AppState {
   onboarded: boolean;
   name: string;
@@ -64,6 +71,7 @@ export interface AppState {
   water: Record<string, number>;
   journal: JournalEntry[];
   ratings: Record<string, number>;
+  todos: Todo[];
 }
 
 const KEY = "serenity.v1";
@@ -88,6 +96,7 @@ const defaultState: AppState = {
   water: {},
   journal: [],
   ratings: {},
+  todos: [],
 };
 
 let state: AppState = load();
@@ -199,6 +208,21 @@ export function addJournal(j: Omit<JournalEntry, "id">) {
 
 export function setRating(date: string, r: number) {
   setState((s) => ({ ratings: { ...s.ratings, [date]: r } }));
+}
+
+export function addTodo(text: string) {
+  const t = text.trim();
+  if (!t) return;
+  setState((s) => ({ todos: [{ id: crypto.randomUUID(), text: t, done: false }, ...s.todos] }));
+}
+export function toggleTodo(id: string) {
+  setState((s) => ({ todos: s.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) }));
+}
+export function toggleTodoRemind(id: string) {
+  setState((s) => ({ todos: s.todos.map((t) => (t.id === id ? { ...t, remind: !t.remind } : t)) }));
+}
+export function removeTodo(id: string) {
+  setState((s) => ({ todos: s.todos.filter((t) => t.id !== id) }));
 }
 
 export function resetAll() {
