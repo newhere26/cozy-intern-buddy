@@ -1,147 +1,167 @@
-# Serenity — A Cozy Companion for Medical Interns
+# Serenity — Feature & Polish Overhaul
 
-A calming, low-pressure companion app for MBBS/medical interns to track rotations, log procedures, journal, and gently care for themselves. No streaks, no deadlines, no shame — just a soft animal friend on the home screen and quiet tools that stay out of the way.
+A large batch of changes across onboarding, home, calendar, wellness, procedures, writing, tools, journey, and companion behavior. Grouped so each area is self-contained.
 
-## Design language
+---
 
-- **Palette**: 5–6 dark, muted pastel themes selected during onboarding (e.g. Midnight Sage, Dusk Lavender, Twilight Rose, Deep Ocean, Warm Cocoa, Charcoal Mist). All themes lean darker with soft pastel accents — not bright, not clinical.
-- **Typography**: Rounded, gentle sans (e.g. Quicksand or Nunito for body; a softer display like Fraunces Soft or DM Serif rounded for headings). No sharp corners anywhere.
-- **Motion**: Slow, breathing-like transitions. Companion has subtle idle animation (blink, sway).
-- **Layout**: Generous negative space, single-thumb reach, mobile-first (390×844 target). Bottom nav for one-touch navigation.
+## 1. Onboarding — stricter validation & new fields
 
-## Companion
+**Step 1 (Profile)**
 
-- 5 options chosen at onboarding: **Capybara, Red Panda, Cow, Turtle, Owl**.
-- Rendered as illustrated but anatomically-recognizable animals (soft, painterly — not flat cartoon, not photoreal). Warm, textured, hand-illustrated feel.
-- On the home screen the companion floats freely on the background (no tile, no card, no border) and occupies ~35–45% of the screen vertically at the top.
-- Idle animation and a soft greeting line underneath ("Good evening, Aditi.").
+- Name: required, **letters + spaces only** (regex `/^[A-Za-z\s]+$/`), no digits/symbols.
+- Country: keep as-is.
+- **City**: new field, required, letters + spaces only.
+- **Medical college**: new field, optional, free text.
+- Inline error messages, "Next" disabled until valid.
 
-## Onboarding flow
+**Step 2 (Shift timings) — expanded**
 
-Kept short and gentle — one question per screen, skippable where possible.
+- Day shift start / end (existing).
+- **Night shift start / end** (default: night starts at day-end, ends at next day-start).
+- **Post-duty off?** yes/no toggle. When no (default for most Indian interns), we know a night shift continues into the next day's day shift.
 
-1. Name / preferred name
-2. Country + region (drives date format: `dd/mm/yyyy` for India & subcontinent; `mm/dd/yyyy` otherwise)
-3. City / hospital (free text, optional)
-4. Internship start date + total duration (default 54 weeks, editable)
-5. Casual Leave (CL) allotment and Privilege Leave (PL) allotment for the year
-6. Typical shift check-in / check-out times (used for the daily rate-your-day nudge)
-7. Choose a companion (Capybara / Red Panda / Cow / Turtle / Owl)
-8. Choose a color theme (5–6 dark pastel swatches)
+**Step 3 (Leaves)**
 
-## Bottom navigation (4 tabs)
+- CL: **required**, numbers only.
+- PL: **optional**, numbers only.
+- **Extension per PL day**: numeric (e.g. 1 day PL = 2 days extension).
+- **Extension per unauthorized absence**: numeric.
+- These feed the Journey "Leaves & Extensions" tile.
 
-- **Home**
-- **Journal**
-- **Tools**
-- **Journey** (chosen name — feels warmer than "Stats"; also considered *Path*, *Milestones*)
+**Step 4 (Companion & theme)** — unchanged.
 
-## Home screen layout
+---
 
-Top to bottom:
+## 2. Home screen — companion interactions & fixes
 
-1. **Companion** — free-floating on background, ~35–45% of screen, no tile.
-2. **Two square tiles side by side**, both collapsible, soft rounded corners:
-  - **Calendar** (left) — label is simply "Calendar", no subtitle.
-  - **Wellness** (right)
-3. **Procedure Log** — full-width horizontal tile, collapsible.
-4. **Affirmations** and **Relaxation** — two small square tiles side by side, below the procedure log.
+- **Fix capybara illustration**: regenerate the capybara asset with correct anatomy (4 limbs, 2 fore + 2 hind).
+- **Tap companion → speak**: opens a small speech bubble with a rotating pool of ~40 friendly, human-sounding lines: encouragement, "how are you feeling?", "did you eat?", "how was rounds?", plus **at least one progress line each day** (e.g. "you're 12 weeks in, 42 to go", "you're 22% done", "one more day = 0.27% closer"). Line pool seeded so at least one progress-flavored line surfaces per day.
+- **Companion size starts smaller** (~30svh instead of 38svh) so growth is visible.
+- **Growth milestones** based on weeks since `startDate`:
+  - 12+ wks: black stethoscope overlay
+  - 26+ wks: shoes + graduation gown overlay
+  - 39+ wks: graduation cap overlay
+  - 52+ wks: rolled diploma in paw
+  - Size scales up ~5% per milestone. Overlays are separate PNGs composited over the companion.
+- **Tile expansion fix**: currently `openTile` state works, but Calendar and Wellness appear to expand together — audit `CalendarTile` / `WellnessTile` to ensure each only reads its own `open` prop and no shared class toggles both.
 
-### Calendar tile
+---
 
-**Collapsed view:**
+## 3. Calendar — full-screen expansion, postings redesign
 
-- Large "Week X / 54" progress readout (bigger font).
-- A tiny 3-day strip: day-before-yesterday, yesterday, today — each color-coded:
-  - green = Present
-  - amber = CL
-  - lilac = PL
-  - (a fourth muted tone for Absent-no-leave)
-- Today is the active day by default.
+- Tapping the Calendar tile **navigates to a new route `/calendar**` (full screen) instead of expanding inline.
+- Full screen shows: month grid, day detail editor, night-shift toggle, and the postings list.
+- **Postings list**: horizontally/vertically scrollable, shows **only 3 at a time** (previous · current · next) with snap scrolling; rest accessible by scroll.
+- **20-color palette** for postings — deterministic assignment by posting index so each rotation gets a distinct pastel that persists.
+- Add-posting form as today.
 
-**Expanded view:**
+### Night-shift mode (big feature)
 
-- Month calendar, today highlighted, past dates editable.
-- Per-day: mark Present / Absent → if Absent, pick CL or PL.
-- Toggle: **Night shift** on/off for a date.
-- When logging a new posting/rotation, set expected check-in & check-out times for that posting.
-- No leaves counter here (that lives in Journey).
-- Rotations shown in **chronological order**, not entry order.
+- When user toggles Night Shift on for today:
+  - Companion image swaps to (or overlays) a **coffee mug + a small lamp glow above head**.
+  - Home greeting changes to: *"Good evening, Dr. {Name}. I'm here, with you through the night and beyond."*
+  - Companion speech pool switches to a **night-shift line set** (~20 lines about coffee, quiet corridors, dawn coming, etc.).
+- Auto-off: at night-shift end time (from onboarding), a lightweight timer clears the night flag, removes lamp/coffee, resets greeting.
+- Implemented with a stored `nightShiftUntil` ISO timestamp checked on mount + interval.
 
-### Wellness tile
+### Attendance reminder
 
-**Collapsed view:** just the label and a soft icon.
+- Local notification (Notification API + `setTimeout` while app open; also a scheduled service-worker note if permission granted) fires **15 min after day-shift start** asking "Did you mark attendance today?".
+- Same for night shift.
 
-**Expanded view — two tabs only:**
+---
 
-- **Hydrate** — tap to add a glass of water; simple day count with a soft filling animation.
-- **Nourish** — log meals (breakfast / lunch / dinner / snack); a note field.
+## 4. Wellness — inline expand, fun water anim, meal phrases
 
-No mood tracker, no "how are you feeling" — that data isn't stored.
+- Wellness tile expands **inline (grows in height only, not full screen)** — everything visible without navigating away.
+- **Water logging**: animated wave-fill glass, +1 taps trigger a droplet ripple + subtle bounce.
+- **Meal logging**: on save, companion pops a **speech bubble with one of 24 rotating phrases** (seeded so no repeat for 7 days).
 
-### Procedure log tile
+---
 
-- Collapsible full-width tile.
-- Dropdown of procedures (searchable, standard MBBS intern list — IV cannulation, ABG, Foley, suturing, LP, intubation, NG tube, etc.).
-- For each logged procedure, 4 fields:
-  - **Ease** (soft 1–5 dots)
-  - **Confidence** (soft 1–5 dots)
-  - **Supervision** — 3 options: *Observed*, *Assisted*, *Independent*
-  - **Notes** (optional short text)
+## 5. Procedure Log — scrollable + custom entry
 
-### Affirmations & Relaxation tiles
+- Procedure picker becomes a **scrollable list** (max-height + overflow).
+- Add a **"+ Custom procedure"** option at bottom — user types their own name; saved with normal ease/confidence/supervision fields.
 
-- Two square tiles below the procedure log.
-- **Affirmations** — opens a full-screen calm view; large rotating library of medicine-flavored, human-sounding affirmations ("It's okay that you didn't know that yet. You're learning.", "Rest is part of the work."). Curated wording, not AI-generated feel. Aim for 150+ at launch.
-- **Relaxation** — guided breathing (box breathing, 4-7-8) with a slow expanding circle.
+---
 
-## Notifications (gentle, cozy tone)
+## 6. Writing tab — cleaner journal + real to-do
 
-- 3–4/day meal check-ins ("Have you eaten something warm today?").
-- One nudge after the user's set check-out time asking them to rate their day (routes into Wellness → day rating stored for Journey trends).
-- No streak/loss language, ever.
+**Layout**: two horizontal collapsed tiles.
 
-## Journal tab
+**Journal tile**
 
-- Free-form daily entries with soft prompts given by the companion - a smaller version of it- sitting at the top right and prompts can be trigger by clicking on it  ("What surprised you today?", "One kind thing you saw.").
-- Entries tied to the current rotation for later reflection.
-- Optional attach: procedures logged that day.
+- Collapsed by default. Tap → opens **full-screen journal editor**.
+- Remove tagline "notebook feel, your words stay on your phone" (keep header).
+- Editor: pure **horizontal ruled lines** background (CSS repeating linear-gradient), text baseline aligned to the lines (use `line-height` matching stripe height, top padding = stripe offset).
+- On save: entry stored with date, title/heading, rotation (auto-detected from date), day rating.
+- **Entries list**: search by heading, sort by **date / rotation / rating** (e.g. "show all happy days").
 
-## Tools tab
+**To-Do tile**
 
-- Quick reference the intern actually reaches for during shifts: common drug doses, pediatric dosing of only standard drug's, IV fluid calculator, GCS, APGAR, unit converters, BMI, corrected calcium, anion gap, medical shorthand and its actual things and feel free to add more Kept minimal and offline-friendly.
-- Also add a phrase book - which will run offline - this is a phrasebook that will have 50 - 80 most common phrases and words of patients complaints that the interns can use to translate and in V1 of the app only language available will be Bengali to English 
+- Renamed to just "To-Do List".
+- Complete → play a short **scratch sound** + strikethrough animation.
+- Bell → schedules **push notifications** at +3m, +5m, +15m, +1h, +3h, +5h, +7h, +9h, +11h, +13h, +15h, +17h, +19h, +21h, +24h. Stops at end-of-day if the day rolls over. Uses `Notification` API + `setTimeout` chain persisted in localStorage so reminders survive reload; requests permission on first bell.
 
-## Journey tab (stats / progress)
+---
 
-- Weeks of internship completed (X / 54).
-- Rotations timeline (chronological).
-- Procedure counts by type + supervision level trend (subtle, no graphs that feel like grading).
-- **Leaves counter lives here**: CL used / allotted, PL used / allotted.
-- Day-rating trend from the evening nudge (soft area chart in theme color).
+## 7. Tools — layout cleanup
 
-## Locale & formatting
+- Move **Bengali Phrasebook** to the top (above the calculator bento grid).
+- Calculators bento grid in the middle — **remove the "Bedside helper" subtitle** from every tile.
+- add more calculators if you would like
+- **Jargon Decoder** tile at the bottom.
 
-- If country is India / Pakistan / Bangladesh / Sri Lanka / Nepal / Bhutan / Maldives → all dates render `dd/mm/yyyy`.
-- Otherwise `mm/dd/yyyy` (or locale-appropriate).
+---
 
-## Technical notes
+## 8. Journey — restructured tiles
 
-- TanStack Start + Tailwind v4 already set up.
-- Local-first for now: settings, companion, theme, calendar entries, procedures, meals, water, journal, affirmations progress all persist in `localStorage` (no backend in v1). Notification prompts use the Web Notifications API where available.
-- Design tokens for each of the 5–6 themes defined in `src/styles.css` under `@theme inline` with a `data-theme="..."` attribute on `<html>`; theme is applied from stored onboarding choice.
-- Routes:
-  - `/` — onboarding gate → home
-  - `/onboarding` — multi-step flow
-  - `/journal`
-  - `/tools`
-  - `/journey`
-- Companion illustrations generated as 5 individual PNG assets (soft painterly style, transparent background) into `src/assets/companions/`.
-- Rounded typography loaded via `<link>` in `__root.tsx` head (Google Fonts: Quicksand + Fraunces).
+- **Internship tile**: bigger display font for the week number; show **only fully completed weeks** (floor), not the in-progress one.
+- **Leaves & Extensions tile** (replaces Leaves tile): shows
+  - CL taken (with department per leave), CL remaining
+  - PL taken (with department), PL remaining
+  - **Extension days owed** and in which department each was incurred
+  - Auto-calculated from `days` (CL/PL/absent statuses) crossed with active rotation on that date and the extension multipliers from onboarding.
+- **Procedures tile**: collapsed → tap opens a **full-screen procedures view**:
+  - Grouped list of every procedure (no mixing), count per procedure name.
+  - Sortable by posting / date / time.
+  - "Best day" stat: date with most procedures.
+- **Postings tile**: collapsible; shows only 3 (prev/current/next) when collapsed, all when expanded. Same 20-color palette as Calendar.
+- **New: Store / Credits tile** (bottom, horizontal, collapsed):
+  - Earn 1 credit per completed internship day.
+  - Redeem for companion accessories: coffee mug, plant, sunglasses, chain, scarf, cap, book, bandana, etc. (~12 items).
+  - cost each of them appropriately with your best assets costing more 
+  - Items apply as overlays on the companion (composable with growth milestones).
 
-## Open questions I'll assume defaults for unless you say otherwise
+---
 
-- Fifth companion: **Owl** (as you suggested).
-- Journey vs Stats: going with **Journey**.
-- Default internship length: **54 weeks**.
-- No account / cloud sync in v1 (fully local). We can add Lovable Cloud later for multi-device sync.
+## 9. Assets to generate
+
+- Fixed capybara (4 limbs).
+- Overlays: stethoscope, gown+shoes, grad cap, diploma, coffee mug, lamp/glow, plus store items (mug, plant, sunglasses, chain, scarf, cap, book, bandana).
+- All as transparent PNGs, positioned via absolute overlay wrapper over `<Companion>`.
+
+---
+
+## 10. Technical notes
+
+- **Store additions** (`src/lib/store.ts`):
+  - `city`, `college`, `nightStart`, `nightEnd`, `postDutyOff`, `extPerPl`, `extPerAbsent`
+  - `nightShiftUntil?: string`
+  - `credits: number`, `ownedItems: string[]`, `equippedItems: string[]`
+  - Journal: add `title`, keep rating linkage
+- **New routes**: `/calendar`, `/journal/new`, `/journal/$id`, `/journey/procedures`
+- **New utility**: `postingColor(index)` returning one of 20 tokens; add `--posting-1..20` CSS vars in `styles.css`.
+- **Notifications**: helper in `src/lib/notify.ts` — permission request, schedule/cancel with persisted queue in localStorage.
+- **Sound**: tiny inline base64 scratch sound (or small mp3 in `src/assets`).
+- **Validation**: shared regex helpers in `src/lib/validate.ts`.
+
+---
+
+## Out of scope (flag before build)
+
+- Actual iOS/Android push (uses web Notification API only — reliable while browser tab lives; best-effort otherwise).
+- Server sync — everything stays local-first.
+
+Ready to build on approval.
