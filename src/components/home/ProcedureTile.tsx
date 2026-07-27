@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ChevronDown, Stethoscope } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChevronDown, Stethoscope, Search, Plus } from "lucide-react";
 import { addProcedure, useApp } from "@/lib/store";
 import type { Supervision } from "@/lib/store";
 import { PROCEDURES } from "@/lib/data";
@@ -12,6 +12,8 @@ const SUPS: { id: Supervision; label: string }[] = [
   { id: "independent", label: "Independent" },
 ];
 
+const CUSTOM = "__custom__";
+
 export function ProcedureTile({
   open,
   onToggle,
@@ -21,23 +23,34 @@ export function ProcedureTile({
 }) {
   const app = useApp();
   const [name, setName] = useState<string>(PROCEDURES[0]);
+  const [custom, setCustom] = useState("");
+  const [q, setQ] = useState("");
   const [ease, setEase] = useState(3);
   const [confidence, setConfidence] = useState(3);
   const [sup, setSup] = useState<Supervision>("assisted");
   const [notes, setNotes] = useState("");
 
+  const list = useMemo(
+    () => PROCEDURES.filter((p) => !q || p.toLowerCase().includes(q.toLowerCase())),
+    [q],
+  );
+
   const recent = app.procedures.slice(0, 3);
 
   const submit = () => {
+    const finalName = name === CUSTOM ? custom.trim() : name;
+    if (!finalName) return;
     addProcedure({
       date: toKey(new Date()),
-      name,
+      name: finalName,
       ease,
       confidence,
       supervision: sup,
       notes: notes.trim() || undefined,
     });
     setNotes("");
+    setCustom("");
+    setName(PROCEDURES[0]);
     setEase(3);
     setConfidence(3);
   };
@@ -62,17 +75,52 @@ export function ProcedureTile({
 
       {open && (
         <div className="mt-4 space-y-3">
-          <select
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-full border border-border bg-background px-3 py-2 text-xs"
-          >
-            {PROCEDURES.map((p) => (
-              <option key={p} value={p}>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search procedure…"
+              className="w-full rounded-full border border-border bg-background pl-8 pr-3 py-1.5 text-xs"
+            />
+          </div>
+
+          <div className="max-h-56 space-y-1 overflow-y-auto rounded-2xl border border-border/60 bg-background/50 p-1.5">
+            {list.map((p) => (
+              <button
+                key={p}
+                onClick={() => setName(p)}
+                className={cn(
+                  "flex w-full items-center rounded-xl px-3 py-1.5 text-left text-xs",
+                  name === p
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground hover:bg-secondary/40",
+                )}
+              >
                 {p}
-              </option>
+              </button>
             ))}
-          </select>
+            <button
+              onClick={() => setName(CUSTOM)}
+              className={cn(
+                "flex w-full items-center gap-1.5 rounded-xl px-3 py-1.5 text-left text-xs italic",
+                name === CUSTOM
+                  ? "bg-primary text-primary-foreground"
+                  : "text-accent hover:bg-secondary/40",
+              )}
+            >
+              <Plus className="h-3 w-3" /> Add custom procedure…
+            </button>
+          </div>
+
+          {name === CUSTOM && (
+            <input
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
+              placeholder="Type procedure name"
+              className="w-full rounded-full border border-border bg-background px-3 py-1.5 text-xs"
+            />
+          )}
 
           <Dots label="Ease" value={ease} onChange={setEase} />
           <Dots label="Confidence" value={confidence} onChange={setConfidence} />
