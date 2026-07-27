@@ -39,9 +39,12 @@ export interface Meal {
 export interface JournalEntry {
   id: string;
   date: string;
+  title?: string;
   text: string;
   prompt?: string;
   procedureIds?: string[];
+  rotationId?: string;
+  rating?: number; // 1-5
 }
 
 export interface Todo {
@@ -49,6 +52,7 @@ export interface Todo {
   text: string;
   done: boolean;
   remind?: boolean;
+  createdAt?: string;
 }
 
 export interface AppState {
@@ -56,12 +60,18 @@ export interface AppState {
   name: string;
   country: string;
   city: string;
+  college: string;
   startDate: string;
   durationWeeks: number;
   clAllotted: number;
   plAllotted: number;
+  extPerPl: number;
+  extPerAbsent: number;
   checkIn: string;
   checkOut: string;
+  nightStart: string;
+  nightEnd: string;
+  postDutyOff: boolean;
   companion: CompanionId;
   theme: ThemeId;
   days: Record<string, DayEntry>;
@@ -72,6 +82,10 @@ export interface AppState {
   journal: JournalEntry[];
   ratings: Record<string, number>;
   todos: Todo[];
+  nightShiftUntil?: string; // ISO
+  credits: number;
+  ownedItems: string[];
+  equippedItems: string[];
 }
 
 const KEY = "serenity.v1";
@@ -81,12 +95,18 @@ const defaultState: AppState = {
   name: "",
   country: "India",
   city: "",
+  college: "",
   startDate: new Date().toISOString().slice(0, 10),
   durationWeeks: 54,
   clAllotted: 12,
   plAllotted: 15,
-  checkIn: "09:00",
-  checkOut: "17:00",
+  extPerPl: 2,
+  extPerAbsent: 3,
+  checkIn: "08:00",
+  checkOut: "16:00",
+  nightStart: "16:00",
+  nightEnd: "08:00",
+  postDutyOff: false,
   companion: "capybara",
   theme: "sage",
   days: {},
@@ -97,6 +117,9 @@ const defaultState: AppState = {
   journal: [],
   ratings: {},
   todos: [],
+  credits: 0,
+  ownedItems: [],
+  equippedItems: [],
 };
 
 let state: AppState = load();
@@ -206,6 +229,16 @@ export function addJournal(j: Omit<JournalEntry, "id">) {
   setState((s) => ({ journal: [{ ...j, id: crypto.randomUUID() }, ...s.journal] }));
 }
 
+export function updateJournal(id: string, patch: Partial<JournalEntry>) {
+  setState((s) => ({
+    journal: s.journal.map((j) => (j.id === id ? { ...j, ...patch } : j)),
+  }));
+}
+
+export function removeJournal(id: string) {
+  setState((s) => ({ journal: s.journal.filter((j) => j.id !== id) }));
+}
+
 export function setRating(date: string, r: number) {
   setState((s) => ({ ratings: { ...s.ratings, [date]: r } }));
 }
@@ -213,7 +246,12 @@ export function setRating(date: string, r: number) {
 export function addTodo(text: string) {
   const t = text.trim();
   if (!t) return;
-  setState((s) => ({ todos: [{ id: crypto.randomUUID(), text: t, done: false }, ...s.todos] }));
+  setState((s) => ({
+    todos: [
+      { id: crypto.randomUUID(), text: t, done: false, createdAt: new Date().toISOString() },
+      ...s.todos,
+    ],
+  }));
 }
 export function toggleTodo(id: string) {
   setState((s) => ({ todos: s.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) }));
@@ -223,6 +261,31 @@ export function toggleTodoRemind(id: string) {
 }
 export function removeTodo(id: string) {
   setState((s) => ({ todos: s.todos.filter((t) => t.id !== id) }));
+}
+
+export function setNightShiftUntil(iso: string | undefined) {
+  setState({ nightShiftUntil: iso });
+}
+
+export function addCredits(n: number) {
+  setState((s) => ({ credits: s.credits + n }));
+}
+export function purchaseItem(id: string, cost: number) {
+  setState((s) => {
+    if (s.credits < cost || s.ownedItems.includes(id)) return {};
+    return {
+      credits: s.credits - cost,
+      ownedItems: [...s.ownedItems, id],
+      equippedItems: [...s.equippedItems, id],
+    };
+  });
+}
+export function toggleEquip(id: string) {
+  setState((s) => ({
+    equippedItems: s.equippedItems.includes(id)
+      ? s.equippedItems.filter((x) => x !== id)
+      : [...s.equippedItems, id],
+  }));
 }
 
 export function resetAll() {

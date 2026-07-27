@@ -35,11 +35,27 @@ export function toKey(d: Date) {
   return `${y}-${m}-${dd}`;
 }
 
+// Current week number (1-indexed): week that is currently in progress.
 export function weeksSince(startISO: string) {
   const start = new Date(startISO + "T00:00:00").getTime();
   const now = Date.now();
   const diff = Math.max(0, now - start);
   return Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
+}
+
+// Fully completed weeks (0-indexed floor). Use in "X / N weeks done".
+export function fullyCompletedWeeks(startISO: string) {
+  const start = new Date(startISO + "T00:00:00").getTime();
+  const now = Date.now();
+  const diff = Math.max(0, now - start);
+  return Math.floor(diff / (7 * 24 * 60 * 60 * 1000));
+}
+
+export function daysSince(startISO: string) {
+  const start = new Date(startISO + "T00:00:00").getTime();
+  const now = Date.now();
+  const diff = Math.max(0, now - start);
+  return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1;
 }
 
 export function addDays(iso: string, n: number) {
