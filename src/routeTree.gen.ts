@@ -14,6 +14,7 @@ import { Route as RelaxationRouteImport } from './routes/relaxation'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as JournalRouteImport } from './routes/journal'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AffirmationsRouteImport } from './routes/affirmations'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -42,6 +43,11 @@ const JournalRoute = JournalRouteImport.update({
   path: '/journal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AffirmationsRoute = AffirmationsRouteImport.update({
   id: '/affirmations',
   path: '/affirmations',
@@ -56,6 +62,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/affirmations': typeof AffirmationsRoute
+  '/calendar': typeof CalendarRoute
   '/journal': typeof JournalRoute
   '/journey': typeof JourneyRoute
   '/onboarding': typeof OnboardingRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/affirmations': typeof AffirmationsRoute
+  '/calendar': typeof CalendarRoute
   '/journal': typeof JournalRoute
   '/journey': typeof JourneyRoute
   '/onboarding': typeof OnboardingRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/affirmations': typeof AffirmationsRoute
+  '/calendar': typeof CalendarRoute
   '/journal': typeof JournalRoute
   '/journey': typeof JourneyRoute
   '/onboarding': typeof OnboardingRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/affirmations'
+    | '/calendar'
     | '/journal'
     | '/journey'
     | '/onboarding'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/affirmations'
+    | '/calendar'
     | '/journal'
     | '/journey'
     | '/onboarding'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/affirmations'
+    | '/calendar'
     | '/journal'
     | '/journey'
     | '/onboarding'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AffirmationsRoute: typeof AffirmationsRoute
+  CalendarRoute: typeof CalendarRoute
   JournalRoute: typeof JournalRoute
   JourneyRoute: typeof JourneyRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JournalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/affirmations': {
       id: '/affirmations'
       path: '/affirmations'
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AffirmationsRoute: AffirmationsRoute,
+  CalendarRoute: CalendarRoute,
   JournalRoute: JournalRoute,
   JourneyRoute: JourneyRoute,
   OnboardingRoute: OnboardingRoute,
