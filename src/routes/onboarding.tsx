@@ -5,6 +5,7 @@ import type { CompanionId, ThemeId } from "@/lib/store";
 import { COMPANIONS, COUNTRIES, THEMES } from "@/lib/data";
 import { Companion } from "@/components/Companion";
 import { cn } from "@/lib/utils";
+import { isLettersOnly, sanitizeInt, sanitizeLetters } from "@/lib/validate";
 import { ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/onboarding")({
@@ -20,8 +21,8 @@ export const Route = createFileRoute("/onboarding")({
 
 const STEPS = [
   "welcome",
-  "name",
-  "country",
+  "profile",
+  "place",
   "internship",
   "leaves",
   "shift",
@@ -37,7 +38,17 @@ function OnboardingPage() {
   const [step, setStep] = useState<Step>("welcome");
   const idx = STEPS.indexOf(step);
 
-  const next = () => setStep(STEPS[Math.min(STEPS.length - 1, idx + 1)]);
+  const canAdvance = (() => {
+    if (step === "profile") return isLettersOnly(app.name);
+    if (step === "place") return isLettersOnly(app.city);
+    if (step === "leaves") return app.clAllotted > 0;
+    return true;
+  })();
+
+  const next = () => {
+    if (!canAdvance) return;
+    setStep(STEPS[Math.min(STEPS.length - 1, idx + 1)]);
+  };
   const back = () => setStep(STEPS[Math.max(0, idx - 1)]);
 
   const finish = () => {
@@ -51,10 +62,7 @@ function OnboardingPage() {
         {STEPS.slice(1, -1).map((s, i) => (
           <div
             key={s}
-            className={cn(
-              "h-1 flex-1 rounded-full",
-              i < idx ? "bg-primary" : "bg-muted",
-            )}
+            className={cn("h-1 flex-1 rounded-full", i < idx ? "bg-primary" : "bg-muted")}
           />
         ))}
       </div>
@@ -72,39 +80,51 @@ function OnboardingPage() {
           </div>
         )}
 
-        {step === "name" && (
-          <Field label="What should we call you?">
+        {step === "profile" && (
+          <Field label="What should we call you?" hint="Letters only please.">
             <input
               autoFocus
               value={app.name}
-              onChange={(e) => setState({ name: e.target.value })}
+              onChange={(e) => setState({ name: sanitizeLetters(e.target.value) })}
               placeholder="your name"
               className="w-full rounded-full border border-border bg-card px-4 py-3 text-base"
             />
+            {!isLettersOnly(app.name) && app.name.length > 0 && (
+              <p className="mt-2 text-[11px] text-destructive">
+                Only letters, spaces, apostrophes and hyphens.
+              </p>
+            )}
           </Field>
         )}
 
-        {step === "country" && (
-          <Field
-            label="Where are you doing your internship?"
-            hint="This sets your date format."
-          >
+        {step === "place" && (
+          <Field label="Where are you doing your internship?" hint="Sets your date format.">
+            <label className="text-[11px] text-muted-foreground">Country</label>
             <select
               value={app.country}
               onChange={(e) => setState({ country: e.target.value })}
-              className="w-full rounded-full border border-border bg-card px-4 py-3 text-base"
+              className="mt-1 mb-3 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
             >
               {COUNTRIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
+            <label className="text-[11px] text-muted-foreground">City (required)</label>
             <input
               value={app.city}
-              onChange={(e) => setState({ city: e.target.value })}
-              placeholder="hospital or city (optional)"
-              className="mt-3 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
+              onChange={(e) => setState({ city: sanitizeLetters(e.target.value) })}
+              placeholder="e.g. Kolkata"
+              className="mt-1 mb-3 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
+            />
+            {!isLettersOnly(app.city) && app.city.length > 0 && (
+              <p className="mb-2 text-[11px] text-destructive">Only letters allowed.</p>
+            )}
+            <label className="text-[11px] text-muted-foreground">Medical college (optional)</label>
+            <input
+              value={app.college}
+              onChange={(e) => setState({ college: e.target.value })}
+              placeholder="e.g. R. G. Kar Medical College"
+              className="mt-1 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
             />
           </Field>
         )}
@@ -119,58 +139,68 @@ function OnboardingPage() {
             />
             <label className="mt-3 block text-xs text-muted-foreground">Total length (weeks)</label>
             <input
-              type="number"
-              value={app.durationWeeks}
-              onChange={(e) => setState({ durationWeeks: Number(e.target.value) || 54 })}
+              inputMode="numeric"
+              value={String(app.durationWeeks)}
+              onChange={(e) => setState({ durationWeeks: Number(sanitizeInt(e.target.value)) || 54 })}
               className="mt-1 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
             />
           </Field>
         )}
 
         {step === "leaves" && (
-          <Field label="How many leaves do you get?" hint="Yearly allotment.">
-            <label className="text-xs text-muted-foreground">Casual leave (CL)</label>
+          <Field label="Leaves & extensions" hint="Numbers only. CL is required.">
+            <label className="text-xs text-muted-foreground">Casual leave (CL) — required</label>
             <input
-              type="number"
-              value={app.clAllotted}
-              onChange={(e) => setState({ clAllotted: Number(e.target.value) || 0 })}
+              inputMode="numeric"
+              value={String(app.clAllotted)}
+              onChange={(e) => setState({ clAllotted: Number(sanitizeInt(e.target.value)) || 0 })}
               className="mt-1 mb-3 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
             />
-            <label className="text-xs text-muted-foreground">Privilege leave (PL)</label>
+            <label className="text-xs text-muted-foreground">Privilege leave (PL) — optional</label>
             <input
-              type="number"
-              value={app.plAllotted}
-              onChange={(e) => setState({ plAllotted: Number(e.target.value) || 0 })}
+              inputMode="numeric"
+              value={String(app.plAllotted)}
+              onChange={(e) => setState({ plAllotted: Number(sanitizeInt(e.target.value)) || 0 })}
+              className="mt-1 mb-3 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
+            />
+            <label className="text-xs text-muted-foreground">Extension days per 1 day of PL</label>
+            <input
+              inputMode="numeric"
+              value={String(app.extPerPl)}
+              onChange={(e) => setState({ extPerPl: Number(sanitizeInt(e.target.value)) || 0 })}
+              className="mt-1 mb-3 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
+            />
+            <label className="text-xs text-muted-foreground">Extension days per unauthorized absence</label>
+            <input
+              inputMode="numeric"
+              value={String(app.extPerAbsent)}
+              onChange={(e) => setState({ extPerAbsent: Number(sanitizeInt(e.target.value)) || 0 })}
               className="mt-1 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
             />
           </Field>
         )}
 
         {step === "shift" && (
-          <Field
-            label="Your usual shift"
-            hint="We'll nudge you gently after check-out to rate your day."
-          >
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-muted-foreground">Check-in</label>
-                <input
-                  type="time"
-                  value={app.checkIn}
-                  onChange={(e) => setState({ checkIn: e.target.value })}
-                  className="mt-1 w-full rounded-full border border-border bg-card px-3 py-3 text-base"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Check-out</label>
-                <input
-                  type="time"
-                  value={app.checkOut}
-                  onChange={(e) => setState({ checkOut: e.target.value })}
-                  className="mt-1 w-full rounded-full border border-border bg-card px-3 py-3 text-base"
-                />
-              </div>
+          <Field label="Your usual shift" hint="Night shift usually continues from day shift.">
+            <div className="text-xs font-medium text-foreground">Day shift</div>
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <TimeField label="Starts" value={app.checkIn} onChange={(v) => setState({ checkIn: v })} />
+              <TimeField label="Ends" value={app.checkOut} onChange={(v) => setState({ checkOut: v })} />
             </div>
+            <div className="mt-4 text-xs font-medium text-foreground">Night shift</div>
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <TimeField label="Starts" value={app.nightStart} onChange={(v) => setState({ nightStart: v })} />
+              <TimeField label="Ends next day" value={app.nightEnd} onChange={(v) => setState({ nightEnd: v })} />
+            </div>
+            <label className="mt-4 flex items-center gap-2 text-xs text-foreground">
+              <input
+                type="checkbox"
+                className="accent-primary"
+                checked={app.postDutyOff}
+                onChange={(e) => setState({ postDutyOff: e.target.checked })}
+              />
+              I get a post-duty off after a night shift
+            </label>
           </Field>
         )}
 
@@ -248,7 +278,13 @@ function OnboardingPage() {
         )}
         <button
           onClick={step === "done" ? finish : next}
-          className="ml-auto flex items-center gap-1.5 rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground"
+          disabled={!canAdvance && step !== "welcome"}
+          className={cn(
+            "ml-auto flex items-center gap-1.5 rounded-full px-6 py-2.5 text-sm font-medium",
+            canAdvance || step === "welcome"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground",
+          )}
         >
           {step === "done" ? "Enter" : step === "welcome" ? "Begin" : "Next"}
           <ArrowRight className="h-3.5 w-3.5" />
@@ -258,15 +294,21 @@ function OnboardingPage() {
   );
 }
 
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
+function TimeField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="text-xs text-muted-foreground">{label}</label>
+      <input
+        type="time"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full rounded-full border border-border bg-card px-3 py-3 text-base"
+      />
+    </div>
+  );
+}
+
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="pt-4">
       <h2 className="font-display text-2xl text-foreground">{label}</h2>
