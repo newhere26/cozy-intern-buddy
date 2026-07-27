@@ -231,7 +231,7 @@ function OnboardingPage() {
               Hello, {app.name || "friend"}.
             </h2>
             <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-              Go softly. Your companion will be here for every shift.
+              Go softly. I will be here for every shift.
             </p>
           </div>
         )}
