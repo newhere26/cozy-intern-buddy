@@ -272,6 +272,13 @@ export function setNightShiftUntil(iso: string | undefined) {
 export function addCredits(n: number) {
   setState((s) => ({ credits: s.credits + n }));
 }
+export function claimCredits(earned: number) {
+  setState((s) => {
+    const delta = Math.max(0, earned - s.claimedDays);
+    if (delta === 0) return {};
+    return { credits: s.credits + delta, claimedDays: earned };
+  });
+}
 export function purchaseItem(id: string, cost: number) {
   setState((s) => {
     if (s.credits < cost || s.ownedItems.includes(id)) return {};
