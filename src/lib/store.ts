@@ -84,6 +84,7 @@ export interface AppState {
   todos: Todo[];
   nightShiftUntil?: string; // ISO
   credits: number;
+  claimedDays: number;
   ownedItems: string[];
   equippedItems: string[];
 }
