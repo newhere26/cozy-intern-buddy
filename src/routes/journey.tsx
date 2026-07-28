@@ -314,8 +314,7 @@ function PostingsPanel({ expanded }: { expanded: boolean }) {
 function StorePanel() {
   const app = useApp();
   const earned = daysSince(app.startDate);
-  const canClaim = Math.max(0, earned - app.credits - app.ownedItems.length * 0);
-  // simple: keep credits synced to earned - spent; if user hasn't claimed, offer button
+  const canClaim = Math.max(0, earned - app.claimedDays);
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between rounded-2xl bg-secondary/30 p-3 text-xs">
@@ -329,7 +328,7 @@ function StorePanel() {
         </div>
         <button
           disabled={canClaim <= 0}
-          onClick={() => addCredits(canClaim)}
+          onClick={() => claimCredits(earned)}
           className={cn(
             "rounded-full px-3 py-1.5 text-[11px] font-medium",
             canClaim > 0
