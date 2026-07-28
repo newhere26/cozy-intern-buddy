@@ -24,8 +24,33 @@ export function Companion({
   const dims =
     size === "lg" ? "h-full w-full" : size === "md" ? "h-24 w-24" : "h-12 w-12";
 
-  const items = STORE.filter((s) => equippedItems.includes(s.id));
+  const shopItems = STORE.filter((s) => equippedItems.includes(s.id));
   const milestones = activeMilestones(completedWeeks);
+
+  // Map milestone → slot so it's worn anatomically
+  const MILESTONE_SLOT: Record<string, "neck" | "body" | "head" | "hand"> = {
+    "3-month stethoscope": "neck",
+    "6-month gown": "body",
+    "9-month cap": "head",
+    "12-month diploma": "hand",
+  };
+
+  // Shop items win over milestones on the same slot
+  const takenSlots = new Set(shopItems.map((it) => it.slot));
+  const milestoneOverlays = milestones
+    .map((m) => ({ ...m, slot: MILESTONE_SLOT[m.label] }))
+    .filter((m) => m.slot && !takenSlots.has(m.slot));
+
+  const slotClass = (slot: string) =>
+    cn(
+      "pointer-events-none absolute z-20 drop-shadow",
+      slot === "head" && "left-1/2 top-[-4%] -translate-x-1/2 text-4xl",
+      slot === "eyes" && "left-1/2 top-[28%] -translate-x-1/2 text-2xl",
+      slot === "neck" && "left-1/2 top-[48%] -translate-x-1/2 text-3xl",
+      slot === "body" && "left-1/2 top-[55%] -translate-x-1/2 text-5xl opacity-90",
+      slot === "hand" && "right-[6%] bottom-[26%] text-3xl",
+      slot === "beside" && "right-[-4%] bottom-2 text-3xl",
+    );
 
   return (
     <div className={cn("relative", dims, className)}>
@@ -46,39 +71,21 @@ export function Companion({
 
       {overlays && (
         <>
-          {/* Milestone badges — top left stack */}
-          <div className="pointer-events-none absolute left-0 top-2 z-20 flex flex-col gap-1">
-            {milestones.map((m) => (
-              <span
-                key={m.label}
-                title={m.label}
-                className="rounded-full bg-card/80 px-1.5 py-0.5 text-lg shadow"
-              >
-                {m.emoji}
-              </span>
-            ))}
-          </div>
-          {/* Store item overlays */}
-          {items.map((it) => (
-            <span
-              key={it.id}
-              title={it.name}
-              className={cn(
-                "pointer-events-none absolute z-20 text-3xl drop-shadow",
-                it.slot === "head" && "left-1/2 top-0 -translate-x-1/2 -translate-y-2",
-                it.slot === "eyes" && "left-1/2 top-[26%] -translate-x-1/2",
-                it.slot === "neck" && "left-1/2 top-[50%] -translate-x-1/2",
-                it.slot === "hand" && "right-1 bottom-[24%]",
-                it.slot === "body" && "left-1/2 top-[42%] -translate-x-1/2",
-                it.slot === "beside" && "right-0 bottom-2",
-              )}
-            >
+          {/* Milestone accessories worn on the companion */}
+          {milestoneOverlays.map((m) => (
+            <span key={m.label} title={m.label} className={slotClass(m.slot!)}>
+              {m.emoji}
+            </span>
+          ))}
+          {/* Shop items */}
+          {shopItems.map((it) => (
+            <span key={it.id} title={it.name} className={slotClass(it.slot)}>
               {it.emoji}
             </span>
           ))}
           {/* Night coffee */}
-          {night && (
-            <span className="pointer-events-none absolute right-2 bottom-[26%] z-20 text-3xl drop-shadow">
+          {night && !takenSlots.has("hand") && (
+            <span className="pointer-events-none absolute right-[6%] bottom-[26%] z-20 text-3xl drop-shadow">
               ☕
             </span>
           )}
