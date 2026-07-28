@@ -119,6 +119,7 @@ const defaultState: AppState = {
   ratings: {},
   todos: [],
   credits: 0,
+  claimedDays: 0,
   ownedItems: [],
   equippedItems: [],
 };
