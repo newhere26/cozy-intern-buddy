@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { addCredits, purchaseItem, toggleEquip, useApp } from "@/lib/store";
+import { claimCredits, purchaseItem, toggleEquip, useApp } from "@/lib/store";
 import { fmtDate, fullyCompletedWeeks, daysSince } from "@/lib/date";
 import { postingColor, rotationForDate } from "@/lib/postings";
 import { STORE } from "@/lib/store-items";
