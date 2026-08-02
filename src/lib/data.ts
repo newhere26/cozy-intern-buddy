@@ -1,9 +1,42 @@
 import type { CompanionId, ThemeId } from "./store";
 import capybara from "@/assets/companions/capybara.png";
+import capybaraNight from "@/assets/companions/capybara-night.png";
+import capybaraProud from "@/assets/companions/capybara-proud.png";
+import capybaraTired from "@/assets/companions/capybara-tired.png";
+import capybaraSleeping from "@/assets/companions/capybara-sleeping.png";
 import redpanda from "@/assets/companions/redpanda.png";
+import redpandaNight from "@/assets/companions/redpanda-night.png";
+import redpandaProud from "@/assets/companions/redpanda-proud.png";
 import cow from "@/assets/companions/cow.png";
+import cowNight from "@/assets/companions/cow-night.png";
+import cowProud from "@/assets/companions/cow-proud.png";
 import turtle from "@/assets/companions/turtle.png";
+import turtleNight from "@/assets/companions/turtle-night.png";
+import turtleProud from "@/assets/companions/turtle-proud.png";
 import owl from "@/assets/companions/owl.png";
+import owlNight from "@/assets/companions/owl-night.png";
+import owlProud from "@/assets/companions/owl-proud.png";
+
+export type CompanionMood = "idle" | "night" | "proud" | "tired" | "sleeping";
+
+export const COMPANION_POSES: Record<CompanionId, Partial<Record<CompanionMood, string>>> = {
+  capybara: {
+    idle: capybara,
+    night: capybaraNight,
+    proud: capybaraProud,
+    tired: capybaraTired,
+    sleeping: capybaraSleeping,
+  },
+  redpanda: { idle: redpanda, night: redpandaNight, proud: redpandaProud },
+  cow: { idle: cow, night: cowNight, proud: cowProud },
+  turtle: { idle: turtle, night: turtleNight, proud: turtleProud },
+  owl: { idle: owl, night: owlNight, proud: owlProud },
+};
+
+export function companionPose(id: CompanionId, mood: CompanionMood = "idle") {
+  const poses = COMPANION_POSES[id] ?? COMPANION_POSES.capybara;
+  return poses[mood] ?? poses.idle ?? capybara;
+}
 
 export const COMPANIONS: { id: CompanionId; name: string; img: string; blurb: string }[] = [
   { id: "capybara", name: "Capybara", img: capybara, blurb: "unbothered, mellow, always here" },
@@ -12,6 +45,7 @@ export const COMPANIONS: { id: CompanionId; name: string; img: string; blurb: st
   { id: "turtle", name: "Turtle", img: turtle, blurb: "slow is a valid pace" },
   { id: "owl", name: "Owl", img: owl, blurb: "quiet company for late shifts" },
 ];
+
 
 export const THEMES: { id: ThemeId; name: string; swatch: string[] }[] = [
   { id: "sage", name: "Midnight Sage", swatch: ["#1f2b26", "#2f3d38", "#a7cbb4", "#c9dfb8"] },

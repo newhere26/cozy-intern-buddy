@@ -239,6 +239,28 @@
 @utility float-slow {
   animation: floaty 7s ease-in-out infinite;
 }
+/* Layered idle: gentle breathing + slow sway, GPU friendly */
+@utility idle-breathe {
+  animation: idle-breathe 4.5s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+@utility idle-sway {
+  animation: idle-sway 9s ease-in-out infinite;
+  will-change: transform;
+}
+/* Smooth, contained scrolling for long lists */
+@utility scroll-smooth-y {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  contain: layout paint;
+}
+@utility list-item-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 72px;
+}
 
 @keyframes breathe {
   0%, 100% { transform: scale(1); }
@@ -248,3 +270,20 @@
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
 }
+@keyframes idle-breathe {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -4px, 0) scale(1.025); }
+}
+@keyframes idle-sway {
+  0%, 100% { transform: rotate(-1.2deg); }
+  50% { transform: rotate(1.2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+

@@ -1,14 +1,16 @@
-import { COMPANIONS } from "@/lib/data";
+import { memo } from "react";
+import { companionPose, COMPANIONS, type CompanionMood } from "@/lib/data";
 import type { CompanionId } from "@/lib/store";
 import { STORE, activeMilestones } from "@/lib/store-items";
 import { cn } from "@/lib/utils";
 
-export function Companion({
+function CompanionBase({
   id,
   className,
   size = "lg",
   overlays = false,
   night = false,
+  mood,
   equippedItems = [],
   completedWeeks = 0,
 }: {
@@ -17,10 +19,13 @@ export function Companion({
   size?: "sm" | "md" | "lg";
   overlays?: boolean;
   night?: boolean;
+  mood?: CompanionMood;
   equippedItems?: string[];
   completedWeeks?: number;
 }) {
   const c = COMPANIONS.find((x) => x.id === id) ?? COMPANIONS[0];
+  const activeMood: CompanionMood = mood ?? (night ? "night" : "idle");
+  const src = companionPose(c.id, activeMood);
   const dims =
     size === "lg" ? "h-full w-full" : size === "md" ? "h-24 w-24" : "h-12 w-12";
 
@@ -52,6 +57,9 @@ export function Companion({
       slot === "beside" && "right-[-4%] bottom-2 text-3xl",
     );
 
+  // The night pose already holds a mug — don't double it up.
+  const poseHasMug = activeMood === "night" && src !== companionPose(c.id, "idle");
+
   return (
     <div className={cn("relative", dims, className)}>
       {/* Night lamp glow behind companion */}
@@ -62,12 +70,17 @@ export function Companion({
         </div>
       )}
 
-      <img
-        src={c.img}
-        alt={c.name}
-        className="relative z-10 h-full w-full select-none object-contain float-slow drop-shadow-2xl"
-        draggable={false}
-      />
+      {/* Sway wrapper + breathe inner: two cheap transform-only layers */}
+      <div className="h-full w-full idle-sway origin-bottom">
+        <img
+          src={src}
+          alt={c.name}
+          decoding="async"
+          loading={size === "lg" ? "eager" : "lazy"}
+          className="relative z-10 h-full w-full select-none object-contain idle-breathe drop-shadow-2xl"
+          draggable={false}
+        />
+      </div>
 
       {overlays && (
         <>
@@ -83,8 +96,8 @@ export function Companion({
               {it.emoji}
             </span>
           ))}
-          {/* Night coffee */}
-          {night && !takenSlots.has("hand") && (
+          {/* Night coffee (only if the art doesn't already have one) */}
+          {night && !poseHasMug && !takenSlots.has("hand") && (
             <span className="pointer-events-none absolute right-[6%] bottom-[26%] z-20 text-3xl drop-shadow">
               ☕
             </span>
@@ -94,3 +107,5 @@ export function Companion({
     </div>
   );
 }
+
+export const Companion = memo(CompanionBase);
