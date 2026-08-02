@@ -145,7 +145,7 @@ function CalendarPage() {
           {rotations.length === 0 ? (
             <p className="text-[11px] text-muted-foreground">No postings yet.</p>
           ) : (
-            <div className="scroll-smooth-y max-h-[300px] snap-y snap-mandatory space-y-2 pr-1">
+            <div className="scroll-snap-y-mandatory max-h-[300px] snap-y snap-mandatory space-y-2 overflow-y-auto pr-1">
               {rotations.map((r, i) => {
                 const c = postingColor(i);
                 const highlight = i === anchor - 1 || i === anchor || i === anchor + 1;

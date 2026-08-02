@@ -85,7 +85,7 @@ export function ProcedureTile({
             />
           </div>
 
-          <div className="scroll-smooth-y max-h-56 space-y-1 rounded-2xl border border-border/60 bg-background/50 p-1.5">
+          <div className="max-h-56 space-y-1 overflow-y-auto rounded-2xl border border-border/60 bg-background/50 p-1.5">
             {list.map((p) => (
               <button
                 key={p}
