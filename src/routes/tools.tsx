@@ -134,10 +134,10 @@ function BentoTile({ tool, onOpen, wide }: { tool: ToolMeta; onOpen: () => void;
       </div>
       <div className="mt-3 font-display text-sm text-foreground leading-tight">{tool.title}</div>
       <div className="mt-0.5 text-[11px] text-muted-foreground">{tool.blurb}</div>
-      <div className="mt-3 flex w-full items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-        <span>Bedside helper</span>
+      <div className="mt-3 flex w-full items-center justify-end text-[10px] uppercase tracking-wider text-muted-foreground">
         <span className="text-primary">Tap to open →</span>
       </div>
+
     </button>
   );
 }
