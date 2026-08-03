@@ -62,9 +62,22 @@ function Home() {
   const sizeBoost = Math.min(1.2, 1 + Math.floor(completed / 13) * 0.05);
   const heightSvh = 32 * sizeBoost;
 
+  const todayKeyStr = new Date().toISOString().slice(0, 10);
+  const currentPosting = app.rotations.find(
+    (r) => todayKeyStr >= r.start && todayKeyStr <= r.end,
+  );
+
   return (
     <AppShell>
-      <div className="px-4 pt-6">
+      <div className="px-4 pt-4">
+        <div className="mb-3 rounded-2xl bg-card/70 px-4 py-2.5">
+          <div className="font-display text-base leading-tight text-foreground">
+            Hello, Dr. {app.name || "friend"}
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            {[app.city, currentPosting?.name].filter(Boolean).join("  |  ") || "Somewhere in the wards"}
+          </div>
+        </div>
         <div
           className="flex flex-col items-center justify-end"
           style={{ height: `${heightSvh}svh` }}

@@ -68,3 +68,30 @@ export function dayLabel(iso: string) {
   const d = new Date(iso + "T00:00:00");
   return d.toLocaleDateString("en-US", { weekday: "short" });
 }
+
+export const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+export function monthLabel(year: number, month: number) {
+  return new Date(year, month, 1).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+// Full weeks (Sun-start) covering the given month, padded with neighbouring days.
+export function monthMatrix(year: number, month: number): { key: string; inMonth: boolean }[] {
+  const first = new Date(year, month, 1);
+  const start = new Date(first);
+  start.setDate(first.getDate() - first.getDay());
+  const cells: { key: string; inMonth: boolean }[] = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    cells.push({ key: toKey(d), inMonth: d.getMonth() === month });
+    if (i >= 34 && d.getMonth() !== month && d > first) {
+      // stop once the last full week containing the month is complete
+      if ((i + 1) % 7 === 0) break;
+    }
+  }
+  return cells;
+}

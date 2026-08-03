@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { ChevronLeft, MoonStar, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, MoonStar, Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import {
   addRotation,
@@ -10,7 +10,8 @@ import {
   useApp,
 } from "@/lib/store";
 import type { DayStatus } from "@/lib/store";
-import { fmtShort, toKey } from "@/lib/date";
+import { WEEKDAYS, fmtShort, monthLabel, monthMatrix, toKey } from "@/lib/date";
+import { canLogAttendance } from "@/lib/shift";
 import { postingColor } from "@/lib/postings";
 import { cn } from "@/lib/utils";
 
@@ -33,24 +34,41 @@ const STATUS_STYLES: Record<DayStatus, string> = {
 
 function CalendarPage() {
   const app = useApp();
-  const today = toKey(new Date());
-  const [selected, setSelected] = useState(today);
+  const [today, setToday] = useState<string>("");
+  const [selected, setSelected] = useState("");
+  const [cursor, setCursor] = useState(() => {
+    const d = new Date();
+    return { y: d.getFullYear(), m: d.getMonth() };
+  });
   const [showAdd, setShowAdd] = useState(false);
 
-  const selectedEntry = app.days[selected];
-  const days = last28Days();
+  useEffect(() => {
+    const k = toKey(new Date());
+    setToday(k);
+    setSelected(k);
+  }, []);
+
+  const selectedEntry = selected ? app.days[selected] : undefined;
+  const cells = monthMatrix(cursor.y, cursor.m);
   const rotations = [...app.rotations].sort((a, b) => a.start.localeCompare(b.start));
 
-  // find current/prev/next posting index
   const currentIdx = rotations.findIndex((r) => today >= r.start && today <= r.end);
   const anchor = currentIdx >= 0 ? currentIdx : 0;
+
+  const gate = today && selected ? canLogAttendance(app, selected, today) : { allowed: false, opensAt: "" };
+
+  const shiftMonth = (delta: number) => {
+    setCursor((c) => {
+      const d = new Date(c.y, c.m + delta, 1);
+      return { y: d.getFullYear(), m: d.getMonth() };
+    });
+  };
 
   const toggleNight = (on: boolean) => {
     setDay(selected, { night: on });
     if (on && selected === today) {
       const [h, m] = app.nightEnd.split(":").map(Number);
       const end = new Date();
-      // if end is earlier in day, roll to next day
       end.setHours(h ?? 8, m ?? 0, 0, 0);
       if (end.getTime() < Date.now()) end.setDate(end.getDate() + 1);
       setNightShiftUntil(end.toISOString());
@@ -71,18 +89,49 @@ function CalendarPage() {
         </div>
 
         <div className="rounded-3xl bg-card p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <button
+              onClick={() => shiftMonth(-1)}
+              aria-label="Previous month"
+              className="grid h-7 w-7 place-items-center rounded-full bg-secondary/50 text-muted-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <div className="font-display text-base text-foreground">
+              {monthLabel(cursor.y, cursor.m)}
+            </div>
+            <button
+              onClick={() => shiftMonth(1)}
+              aria-label="Next month"
+              className="grid h-7 w-7 place-items-center rounded-full bg-secondary/50 text-muted-foreground"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mb-1 grid grid-cols-7 gap-1">
+            {WEEKDAYS.map((w) => (
+              <div key={w} className="text-center text-[9px] uppercase tracking-wide text-muted-foreground">
+                {w.slice(0, 1)}
+              </div>
+            ))}
+          </div>
+
           <div className="grid grid-cols-7 gap-1">
-            {days.map((k) => {
+            {cells.map(({ key: k, inMonth }) => {
               const s = app.days[k]?.status;
               const night = app.days[k]?.night;
               const isSel = k === selected;
               return (
                 <button
                   key={k}
-                  onClick={() => setSelected(k)}
+                  onClick={() => inMonth && setSelected(k)}
+                  disabled={!inMonth}
                   className={cn(
                     "relative flex aspect-square flex-col items-center justify-center rounded-lg border border-border/40 text-[10px]",
+                    !inMonth && "opacity-30",
                     isSel && "ring-2 ring-primary",
+                    k === today && !isSel && "ring-1 ring-primary/50",
                     s === "present" && "bg-present/70 text-background",
                     s === "cl" && "bg-cl/70 text-background",
                     s === "pl" && "bg-pl/70 text-background",
@@ -101,24 +150,33 @@ function CalendarPage() {
 
         <div className="rounded-3xl bg-secondary/40 p-4">
           <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-            {fmtShort(selected, app.country)}
+            {selected ? fmtShort(selected, app.country) : ""}
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {(["present", "cl", "pl", "absent"] as DayStatus[]).map((st) => (
               <button
                 key={st}
+                disabled={!gate.allowed}
                 onClick={() => setDay(selected, { status: st })}
                 className={cn(
                   "rounded-full px-2.5 py-1 text-[11px] font-medium",
                   selectedEntry?.status === st
                     ? STATUS_STYLES[st]
                     : "border border-border bg-transparent text-muted-foreground",
+                  !gate.allowed && "cursor-not-allowed opacity-40",
                 )}
               >
                 {st === "present" ? "Present" : st === "cl" ? "CL" : st === "pl" ? "PL" : "Absent"}
               </button>
             ))}
           </div>
+          {!gate.allowed && selected && (
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              {selected > today
+                ? "This day hasn't happened yet."
+                : `You can log attendance after ${gate.opensAt} — once half your shift is done.`}
+            </p>
+          )}
           <label className="mt-3 flex items-center gap-2 text-xs text-foreground">
             <input
               type="checkbox"
@@ -145,7 +203,7 @@ function CalendarPage() {
           {rotations.length === 0 ? (
             <p className="text-[11px] text-muted-foreground">No postings yet.</p>
           ) : (
-            <div className="scroll-snap-y-mandatory max-h-[300px] snap-y snap-mandatory space-y-2 overflow-y-auto pr-1">
+            <div className="max-h-[300px] snap-y snap-mandatory space-y-2 overflow-y-auto pr-1">
               {rotations.map((r, i) => {
                 const c = postingColor(i);
                 const highlight = i === anchor - 1 || i === anchor || i === anchor + 1;
@@ -226,15 +284,4 @@ function AddRotationForm({ onDone }: { onDone: () => void }) {
       </div>
     </form>
   );
-}
-
-function last28Days(): string[] {
-  const arr: string[] = [];
-  const today = new Date();
-  for (let i = 27; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    arr.push(toKey(d));
-  }
-  return arr;
 }

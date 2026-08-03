@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PHRASEBOOK } from "@/lib/data";
+import { DRUGS, DRUG_CLASSES } from "@/lib/drugs";
 import { cn } from "@/lib/utils";
 import {
   Activity,
@@ -13,7 +14,7 @@ import {
   Eye,
   Flame,
   Heart,
-  HelpCircle,
+  Pill,
   Search,
   TriangleAlert,
 } from "lucide-react";
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/tools")({
   head: () => ({
     meta: [
       { title: "Clinical Bedside Tools — Serenity" },
-      { name: "description", content: "Offline calculators, Bengali phrasebook, and jargon decoder." },
+      { name: "description", content: "Offline calculators, Bengali phrasebook, and a common drugs reference." },
       { property: "og:title", content: "Clinical Bedside Tools — Serenity" },
       { property: "og:description", content: "Quiet, offline-first tools for the ward." },
       { property: "og:type", content: "website" },
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/tools")({
 
 type ToolId =
   | "iv" | "gcs" | "apgar" | "qsofa" | "parkland" | "bmi"
-  | "curb65" | "wells" | "hasbled" | "peds" | "phrasebook" | "jargon";
+  | "curb65" | "wells" | "hasbled" | "peds" | "phrasebook" | "drugs";
 
 interface ToolMeta {
   id: ToolId;
@@ -56,7 +57,7 @@ const TOOLS: ToolMeta[] = [
   { id: "hasbled", title: "HAS-BLED Bleeding Risk", blurb: "Anticoagulation bleed score", Icon: TriangleAlert, tint: "text-red-300 bg-red-400/10" },
   { id: "peds", title: "Paediatric Doses", blurb: "Weight-based common drugs", Icon: Compass, tint: "text-teal-300 bg-teal-400/10" },
   { id: "phrasebook", title: "Bengali Patient Phrasebook", blurb: "Accurate hospital complaints translations", Icon: ArrowLeftRight, tint: "text-fuchsia-300 bg-fuchsia-400/10" },
-  { id: "jargon", title: "Ward Jargon Decoder", blurb: "Confusing hospital shorthand", Icon: HelpCircle, tint: "text-amber-300 bg-amber-400/10" },
+  { id: "drugs", title: "Common Drugs", blurb: "Generic names, doses, Indian brands", Icon: Pill, tint: "text-amber-300 bg-amber-400/10" },
 ];
 
 function ToolsPage() {
@@ -104,12 +105,12 @@ function ToolsPage() {
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {TOOLS.filter((t) => t.id !== "phrasebook" && t.id !== "jargon").map((t) => (
+          {TOOLS.filter((t) => t.id !== "phrasebook" && t.id !== "drugs").map((t) => (
             <BentoTile key={t.id} tool={t} onOpen={() => setOpen(t.id)} />
           ))}
         </div>
         <div className="mt-3 space-y-3">
-          {TOOLS.filter((t) => t.id === "phrasebook" || t.id === "jargon").map((t) => (
+          {TOOLS.filter((t) => t.id === "phrasebook" || t.id === "drugs").map((t) => (
             <BentoTile key={t.id} tool={t} onOpen={() => setOpen(t.id)} wide />
           ))}
         </div>
@@ -133,10 +134,10 @@ function BentoTile({ tool, onOpen, wide }: { tool: ToolMeta; onOpen: () => void;
       </div>
       <div className="mt-3 font-display text-sm text-foreground leading-tight">{tool.title}</div>
       <div className="mt-0.5 text-[11px] text-muted-foreground">{tool.blurb}</div>
-      <div className="mt-3 flex w-full items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-        <span>Bedside helper</span>
+      <div className="mt-3 flex w-full items-center justify-end text-[10px] uppercase tracking-wider text-muted-foreground">
         <span className="text-primary">Tap to open →</span>
       </div>
+
     </button>
   );
 }
@@ -153,7 +154,7 @@ function ToolBody({ id }: { id: ToolId }) {
   if (id === "hasbled") return <HASBLED />;
   if (id === "peds") return <PedsDoses />;
   if (id === "phrasebook") return <Phrasebook />;
-  if (id === "jargon") return <Jargon />;
+  if (id === "drugs") return <DrugsRef />;
   return null;
 }
 
@@ -428,32 +429,22 @@ function Phrasebook() {
   );
 }
 
-const JARGON: { code: string; full: string; note: string }[] = [
-  { code: "NPO / NBM", full: "Nil Per Os / Nil By Mouth", note: "Nothing by mouth. Critical before general anesthesia (at least 6–8 hours) to prevent pulmonary aspiration." },
-  { code: "PRN", full: "Pro Re Nata", note: "As needed. Must list minimum dose interval and indication (e.g. Paracetamol 1 g Q6H PRN for Temp >38.5°C)." },
-  { code: "STAT", full: "Immediately / At once", note: "Must be administered or done immediately, usually within 15 minutes of the written order." },
-  { code: "BD / BID", full: "Twice daily", note: "Two divided doses in 24 hours." },
-  { code: "TDS / TID", full: "Three times daily", note: "Three divided doses in 24 hours." },
-  { code: "QID", full: "Four times daily", note: "Four divided doses; roughly Q6H." },
-  { code: "HS", full: "At bedtime", note: "Hora somni. Given at sleep." },
-  { code: "SOS", full: "If necessary", note: "One-time dose to be given if the patient's condition demands." },
-  { code: "DAMA / LAMA", full: "Discharged / Left against medical advice", note: "Requires witnessed signature and clear counselling documentation." },
-  { code: "DNR", full: "Do Not Resuscitate", note: "Advance decision. Must be documented with consultant and family consensus." },
-  { code: "K/C/O", full: "Known case of", note: "Existing documented diagnosis in the patient's history." },
-  { code: "H/O", full: "History of", note: "Past history — resolved or ongoing." },
-];
-
-function Jargon() {
+function DrugsRef() {
   const [q, setQ] = useState("");
-  const [copied, setCopied] = useState<string | null>(null);
-  const list = JARGON.filter((j) => !q || j.code.toLowerCase().includes(q.toLowerCase()) || j.full.toLowerCase().includes(q.toLowerCase()) || j.note.toLowerCase().includes(q.toLowerCase()));
-  const copy = async (code: string) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(code);
-      setTimeout(() => setCopied(null), 1200);
-    } catch { /* ignore */ }
-  };
+  const [cls, setCls] = useState<string>("All");
+  const list = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    return DRUGS.filter((d) => {
+      if (cls !== "All" && d.cls !== cls) return false;
+      if (!query) return true;
+      return (
+        d.name.toLowerCase().includes(query) ||
+        d.cls.toLowerCase().includes(query) ||
+        d.brands.join(" ").toLowerCase().includes(query)
+      );
+    });
+  }, [q, cls]);
+
   return (
     <div>
       <div className="relative">
@@ -461,29 +452,54 @@ function Jargon() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search abbreviations, drugs, rules…"
+          placeholder="Search generic name, brand or class…"
           className="w-full rounded-full border border-border bg-card pl-8 pr-3 py-2 text-xs"
         />
       </div>
-      <div className="mt-3 space-y-2">
-        {list.map((j) => (
-          <div key={j.code} className="rounded-2xl border border-border bg-card p-3">
-            <button
-              onClick={() => copy(j.code)}
-              className={cn(
-                "rounded-lg px-2 py-0.5 text-[11px] font-medium",
-                copied === j.code ? "bg-primary text-primary-foreground" : "bg-secondary/60 text-foreground",
-              )}
-            >
-              {copied === j.code ? "Copied!" : j.code}
-            </button>
-            <div className="mt-2 font-display text-sm text-foreground">{j.full}</div>
-            <p className="mt-1 text-[11px] italic text-muted-foreground">{j.note}</p>
-          </div>
+
+      <div className="-mx-4 mt-3 flex snap-x gap-2 overflow-x-auto px-4 pb-1">
+        {["All", ...DRUG_CLASSES].map((c) => (
+          <button
+            key={c}
+            onClick={() => setCls(c)}
+            className={cn(
+              "shrink-0 snap-start rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
+              cls === c
+                ? "bg-primary text-primary-foreground"
+                : "border border-border bg-card text-muted-foreground",
+            )}
+          >
+            {c}
+          </button>
         ))}
       </div>
-      <p className="mt-3 text-[10px] text-muted-foreground">
-        💡 Tap a shorthand code above to copy it for bedside logs.
+
+      <div className="mt-3 space-y-2">
+        {list.map((d) => (
+          <div key={d.name} className="rounded-2xl border border-border bg-card p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="font-display text-sm text-foreground">{d.name}</div>
+              <span className="shrink-0 rounded-full bg-secondary/60 px-2 py-0.5 text-[9px] text-muted-foreground">
+                {d.cls}
+              </span>
+            </div>
+            <div className="mt-1 text-[11px] text-foreground">{d.dose}</div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">Route: {d.route}</div>
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {d.brands.map((b) => (
+                <span key={b} className="rounded-lg bg-secondary/50 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  {b}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+        {list.length === 0 && (
+          <p className="text-[11px] text-muted-foreground">Nothing matched that search.</p>
+        )}
+      </div>
+      <p className="mt-3 text-[10px] italic text-muted-foreground">
+        Quick bedside reference only — always confirm with your unit protocol before prescribing.
       </p>
     </div>
   );

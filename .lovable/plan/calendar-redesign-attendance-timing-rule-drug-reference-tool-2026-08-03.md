@@ -44,4 +44,10 @@ If you want this, tell me whether to use Lovable's built-in backend (recommended
 
 ## Not included
 
-Auth/backend work is not part of this plan — it is a separate build once you pick a direction.
+Auth/backend work is not part of this plan — it is a separate build once you pick a direction. 
+
+4) decrease the lag in opening screens when clicked on it
+
+5)add a small bar on top of the homescreen in which there is "Hello, Dr  [ name ]" and below this line there should be another line " [their city ] | [department in what they are currently posted] " 
+
+&nbsp;
