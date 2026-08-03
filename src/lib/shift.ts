@@ -33,6 +33,7 @@ export function canLogAttendance(app: AppState, dateKey: string, todayKey: strin
   const { half } = shiftWindow(app, dateKey);
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
-  const allowed = nowMin >= half || nowMin + 1440 >= half;
-  return { allowed: nowMin >= half % 1440 ? true : allowed && half < 1440 ? false : allowed, opensAt: fmtMin(half) };
+  // half >= 1440 means the midpoint falls after midnight (night shift): not yet today.
+  const allowed = half < 1440 && nowMin >= half;
+  return { allowed, opensAt: fmtMin(half) };
 }
