@@ -35,7 +35,8 @@ export const Route = createFileRoute("/tools")({
 
 type ToolId =
   | "iv" | "gcs" | "apgar" | "qsofa" | "parkland" | "bmi"
-  | "curb65" | "wells" | "hasbled" | "peds" | "phrasebook" | "drugs";
+  | "curb65" | "wells" | "hasbled" | "peds" | "phrasebook" | "drugs"
+  | "chadsvasc" | "abcd2" | "nihss";
 
 interface ToolMeta {
   id: ToolId;
@@ -46,17 +47,23 @@ interface ToolMeta {
 }
 
 const TOOLS: ToolMeta[] = [
-  { id: "iv", title: "IV Fluid Drip Speed", blurb: "Volume duration drop factors", Icon: Droplets, tint: "text-sky-300 bg-sky-400/10" },
-  { id: "gcs", title: "Glasgow Coma Scale", blurb: "Consciousness level metric", Icon: Eye, tint: "text-amber-300 bg-amber-400/10" },
-  { id: "apgar", title: "APGAR assessment", blurb: "Newborn vital health score", Icon: Heart, tint: "text-rose-300 bg-rose-400/10" },
-  { id: "qsofa", title: "qSOFA Sepsis Risk", blurb: "Bedside infection triage", Icon: TriangleAlert, tint: "text-orange-300 bg-orange-400/10" },
-  { id: "parkland", title: "Parkland Burn Resusc.", blurb: "Estimated 24h hydration volume", Icon: Flame, tint: "text-yellow-300 bg-yellow-400/10" },
-  { id: "bmi", title: "BMI Calculator", blurb: "Mass/height category calculator", Icon: Activity, tint: "text-emerald-300 bg-emerald-400/10" },
-  { id: "curb65", title: "CURB-65 Pneumonia", blurb: "Mortality & severity predictor", Icon: ClipboardList, tint: "text-violet-300 bg-violet-400/10" },
-  { id: "wells", title: "Wells' PE Criteria", blurb: "Pulmonary embolism risk scale", Icon: Activity, tint: "text-cyan-300 bg-cyan-400/10" },
-  { id: "hasbled", title: "HAS-BLED Bleeding Risk", blurb: "Anticoagulation bleed score", Icon: TriangleAlert, tint: "text-red-300 bg-red-400/10" },
-  { id: "peds", title: "Paediatric Doses", blurb: "Weight-based common drugs", Icon: Compass, tint: "text-teal-300 bg-teal-400/10" },
-  { id: "phrasebook", title: "Bengali Patient Phrasebook", blurb: "Accurate hospital complaints translations", Icon: ArrowLeftRight, tint: "text-fuchsia-300 bg-fuchsia-400/10" },
+  // Scores first — quickest one-tap needs on the ward
+  { id: "gcs", title: "Glasgow Coma Scale", blurb: "Consciousness level", Icon: Eye, tint: "text-amber-300 bg-amber-400/10" },
+  { id: "nihss", title: "NIHSS Stroke Scale", blurb: "15-item stroke severity", Icon: Brain, tint: "text-indigo-300 bg-indigo-400/10" },
+  { id: "qsofa", title: "qSOFA Sepsis Risk", blurb: "Infection triage", Icon: TriangleAlert, tint: "text-orange-300 bg-orange-400/10" },
+  { id: "curb65", title: "CURB-65 Pneumonia", blurb: "Severity & mortality", Icon: ClipboardList, tint: "text-violet-300 bg-violet-400/10" },
+  { id: "chadsvasc", title: "CHA₂DS₂-VASc", blurb: "Stroke risk in AF", Icon: Heart, tint: "text-pink-300 bg-pink-400/10" },
+  { id: "abcd2", title: "ABCD² after TIA", blurb: "Early stroke risk", Icon: Brain, tint: "text-blue-300 bg-blue-400/10" },
+  { id: "wells", title: "Wells' PE Criteria", blurb: "Embolism risk", Icon: Activity, tint: "text-cyan-300 bg-cyan-400/10" },
+  { id: "hasbled", title: "HAS-BLED Bleeding", blurb: "Anticoagulation bleed", Icon: TriangleAlert, tint: "text-red-300 bg-red-400/10" },
+  // Bedside maths
+  { id: "iv", title: "IV Fluid Drip Speed", blurb: "Volume & drop factors", Icon: Droplets, tint: "text-sky-300 bg-sky-400/10" },
+  { id: "bmi", title: "BMI Calculator", blurb: "Mass / height category", Icon: Activity, tint: "text-emerald-300 bg-emerald-400/10" },
+  { id: "parkland", title: "Parkland Burn Fluid", blurb: "24 h resuscitation", Icon: Flame, tint: "text-yellow-300 bg-yellow-400/10" },
+  { id: "apgar", title: "APGAR Assessment", blurb: "Newborn vitality", Icon: Heart, tint: "text-rose-300 bg-rose-400/10" },
+  { id: "peds", title: "Paediatric Doses", blurb: "Weight-based dosing", Icon: Compass, tint: "text-teal-300 bg-teal-400/10" },
+  // Wide references
+  { id: "phrasebook", title: "Bengali Patient Phrasebook", blurb: "Ask your patient, system by system", Icon: ArrowLeftRight, tint: "text-fuchsia-300 bg-fuchsia-400/10" },
   { id: "drugs", title: "Common Drugs", blurb: "Generic names, doses, Indian brands", Icon: Pill, tint: "text-amber-300 bg-amber-400/10" },
 ];
 
