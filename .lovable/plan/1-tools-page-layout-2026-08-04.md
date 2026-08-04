@@ -1,4 +1,4 @@
-# Tools polish, doctor-first phrasebook, more scores & drugs, wellness buttons
+Tools polish, doctor-first phrasebook, more scores & drugs, wellness buttons
 
 ## 1. Tools page layout
 
