@@ -422,12 +422,129 @@ function PedsDoses() {
   );
 }
 
+function ChadsVasc() {
+  const [v, setV] = useState({ chf: false, htn: false, age75: false, dm: false, stroke: false, vasc: false, age65: false, female: false });
+  const t = (k: keyof typeof v) => setV((s) => ({ ...s, [k]: !s[k] }));
+  const score =
+    (v.chf ? 1 : 0) + (v.htn ? 1 : 0) + (v.age75 ? 2 : 0) + (v.dm ? 1 : 0) +
+    (v.stroke ? 2 : 0) + (v.vasc ? 1 : 0) + (v.age65 && !v.age75 ? 1 : 0) + (v.female ? 1 : 0);
+  const advice =
+    score === 0 ? "Low risk — no antithrombotic usually needed"
+      : score === 1 ? "Consider oral anticoagulation (esp. if male)"
+        : "Oral anticoagulation recommended";
+  return (
+    <div className="space-y-2">
+      <ScoreCard value={score} label="CHA₂DS₂-VASc" sub={advice} />
+      <YesNoRow label="Congestive heart failure / LV dysfunction" value={v.chf} onChange={() => t("chf")} />
+      <YesNoRow label="Hypertension" value={v.htn} onChange={() => t("htn")} />
+      <YesNoRow label="Age ≥ 75 years" value={v.age75} onChange={() => t("age75")} points={2} />
+      <YesNoRow label="Diabetes mellitus" value={v.dm} onChange={() => t("dm")} />
+      <YesNoRow label="Prior stroke / TIA / thromboembolism" value={v.stroke} onChange={() => t("stroke")} points={2} />
+      <YesNoRow label="Vascular disease (MI, PAD, aortic plaque)" value={v.vasc} onChange={() => t("vasc")} />
+      <YesNoRow label="Age 65–74 years" value={v.age65} onChange={() => t("age65")} />
+      <YesNoRow label="Female sex" value={v.female} onChange={() => t("female")} />
+      <p className="text-[10px] italic text-muted-foreground">Age ≥75 supersedes the 65–74 point.</p>
+    </div>
+  );
+}
+
+function ABCD2() {
+  const [age, setAge] = useState(false);
+  const [bp, setBp] = useState(false);
+  const [clin, setClin] = useState(0);
+  const [dur, setDur] = useState(0);
+  const [dm, setDm] = useState(false);
+  const score = (age ? 1 : 0) + (bp ? 1 : 0) + clin + dur + (dm ? 1 : 0);
+  const band = score <= 3 ? "Low — 2-day stroke risk ~1%" : score <= 5 ? "Moderate — ~4%" : "High — ~8%";
+  return (
+    <div className="space-y-2">
+      <ScoreCard value={`${score}/7`} label="ABCD² after TIA" sub={band} />
+      <YesNoRow label="Age ≥ 60 years" value={age} onChange={setAge} />
+      <YesNoRow label="BP ≥ 140/90 mmHg at assessment" value={bp} onChange={setBp} />
+      <Choice label="Clinical features" value={clin} onChange={setClin} options={[[2, "Unilateral weakness"], [1, "Speech disturbance, no weakness"], [0, "Neither"]]} />
+      <Choice label="Duration of symptoms" value={dur} onChange={setDur} options={[[2, "≥ 60 min"], [1, "10–59 min"], [0, "< 10 min"]]} />
+      <YesNoRow label="Diabetes mellitus" value={dm} onChange={setDm} />
+    </div>
+  );
+}
+
+const NIHSS_ITEMS: { key: string; label: string; options: [number, string][] }[] = [
+  { key: "1a", label: "1a. Level of consciousness", options: [[0, "Alert"], [1, "Rouses to minor stimulation"], [2, "Requires repeated stimulation"], [3, "Unresponsive / reflex only"]] },
+  { key: "1b", label: "1b. LOC questions (month, age)", options: [[0, "Both correct"], [1, "One correct"], [2, "Neither correct"]] },
+  { key: "1c", label: "1c. LOC commands (eyes, grip)", options: [[0, "Both correct"], [1, "One correct"], [2, "Neither correct"]] },
+  { key: "2", label: "2. Best gaze", options: [[0, "Normal"], [1, "Partial gaze palsy"], [2, "Forced deviation"]] },
+  { key: "3", label: "3. Visual fields", options: [[0, "No loss"], [1, "Partial hemianopia"], [2, "Complete hemianopia"], [3, "Bilateral hemianopia"]] },
+  { key: "4", label: "4. Facial palsy", options: [[0, "Normal"], [1, "Minor"], [2, "Partial"], [3, "Complete"]] },
+  { key: "5a", label: "5a. Motor arm — left", options: [[0, "No drift"], [1, "Drift"], [2, "Some effort against gravity"], [3, "No effort against gravity"], [4, "No movement"]] },
+  { key: "5b", label: "5b. Motor arm — right", options: [[0, "No drift"], [1, "Drift"], [2, "Some effort against gravity"], [3, "No effort against gravity"], [4, "No movement"]] },
+  { key: "6a", label: "6a. Motor leg — left", options: [[0, "No drift"], [1, "Drift"], [2, "Some effort against gravity"], [3, "No effort against gravity"], [4, "No movement"]] },
+  { key: "6b", label: "6b. Motor leg — right", options: [[0, "No drift"], [1, "Drift"], [2, "Some effort against gravity"], [3, "No effort against gravity"], [4, "No movement"]] },
+  { key: "7", label: "7. Limb ataxia", options: [[0, "Absent"], [1, "One limb"], [2, "Two limbs"]] },
+  { key: "8", label: "8. Sensory", options: [[0, "Normal"], [1, "Mild–moderate loss"], [2, "Severe / total loss"]] },
+  { key: "9", label: "9. Best language", options: [[0, "Normal"], [1, "Mild–moderate aphasia"], [2, "Severe aphasia"], [3, "Mute / global aphasia"]] },
+  { key: "10", label: "10. Dysarthria", options: [[0, "Normal"], [1, "Mild–moderate"], [2, "Severe / anarthric"]] },
+  { key: "11", label: "11. Extinction / inattention", options: [[0, "None"], [1, "One modality"], [2, "Profound hemi-inattention"]] },
+];
+
+function NIHSS() {
+  const [vals, setVals] = useState<Record<string, number>>(() =>
+    Object.fromEntries(NIHSS_ITEMS.map((i) => [i.key, 0])),
+  );
+  const total = Object.values(vals).reduce((a, b) => a + b, 0);
+  const band =
+    total === 0 ? "No stroke symptoms"
+      : total <= 4 ? "Minor stroke"
+        : total <= 15 ? "Moderate stroke"
+          : total <= 20 ? "Moderate to severe"
+            : "Severe stroke";
+  return (
+    <div className="space-y-2">
+      <ScoreCard value={`${total}/42`} label="NIHSS total" sub={band} />
+      {NIHSS_ITEMS.map((item) => (
+        <Choice
+          key={item.key}
+          label={item.label}
+          value={vals[item.key] ?? 0}
+          onChange={(n) => setVals((s) => ({ ...s, [item.key]: n }))}
+          options={item.options}
+        />
+      ))}
+      <button
+        onClick={() => setVals(Object.fromEntries(NIHSS_ITEMS.map((i) => [i.key, 0])))}
+        className="w-full rounded-full border border-border bg-card py-2 text-xs text-muted-foreground"
+      >
+        Reset all items
+      </button>
+    </div>
+  );
+}
+
 function Phrasebook() {
   const [q, setQ] = useState("");
-  const list = useMemo(
-    () => PHRASEBOOK.filter((p) => !q || p.en.toLowerCase().includes(q.toLowerCase()) || p.roman.toLowerCase().includes(q.toLowerCase()) || p.bn.includes(q)),
-    [q],
-  );
+  const [sys, setSys] = useState<string>("All");
+  const list = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    return PHRASEBOOK.filter((p) => {
+      if (sys !== "All" && sys !== "Helper words" && p.sys !== sys) return false;
+      if (!query) return true;
+      return (
+        p.en.toLowerCase().includes(query) ||
+        p.roman.toLowerCase().includes(query) ||
+        p.bn.includes(q.trim())
+      );
+    });
+  }, [q, sys]);
+
+  const helpers = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return HELPER_WORDS;
+    return HELPER_WORDS.filter(
+      (h) => h.en.toLowerCase().includes(query) || h.roman.toLowerCase().includes(query) || h.bn.includes(q.trim()),
+    );
+  }, [q]);
+
+  const showHelpers = sys === "All" || sys === "Helper words";
+
   return (
     <div>
       <div className="relative">
@@ -435,19 +552,67 @@ function Phrasebook() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search English or Bengali"
+          placeholder="Search English, Bengali or romanised…"
           className="w-full rounded-full border border-border bg-card pl-8 pr-3 py-2 text-xs"
         />
       </div>
-      <div className="mt-3 space-y-1.5">
-        {list.map((p, i) => (
-          <div key={i} className="rounded-2xl bg-card p-3">
-            <div className="text-sm text-foreground">{p.bn}</div>
-            <div className="mt-0.5 text-[11px] italic text-muted-foreground">{p.roman}</div>
-            <div className="mt-1 text-xs text-accent">{p.en}</div>
-          </div>
+
+      <div className="-mx-4 mt-3 flex snap-x gap-2 overflow-x-auto px-4 pb-1">
+        {["All", ...PHRASE_SYSTEMS, "Helper words"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setSys(s)}
+            className={cn(
+              "shrink-0 snap-start rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
+              sys === s
+                ? "bg-primary text-primary-foreground"
+                : "border border-border bg-card text-muted-foreground",
+            )}
+          >
+            {s}
+          </button>
         ))}
       </div>
+
+      {sys !== "Helper words" && (
+        <div className="mt-3 space-y-1.5">
+          {list.map((p, i) => (
+            <div key={i} className="rounded-2xl bg-card p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="text-sm text-foreground">{p.bn}</div>
+                {sys === "All" && (
+                  <span className="shrink-0 rounded-full bg-secondary/60 px-2 py-0.5 text-[9px] text-muted-foreground">
+                    {p.sys}
+                  </span>
+                )}
+              </div>
+              <div className="mt-0.5 text-[11px] italic text-muted-foreground">{p.roman}</div>
+              <div className="mt-1 text-xs text-accent">{p.en}</div>
+            </div>
+          ))}
+          {list.length === 0 && (
+            <p className="text-[11px] text-muted-foreground">Nothing matched that search.</p>
+          )}
+        </div>
+      )}
+
+      {showHelpers && (
+        <div className="mt-4">
+          <div className="text-[11px] font-medium text-foreground">Helper words</div>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {helpers.map((h) => (
+              <div key={h.en + h.bn} className="rounded-xl bg-card px-2.5 py-1.5">
+                <div className="text-xs text-foreground">{h.bn}</div>
+                <div className="text-[10px] italic text-muted-foreground">{h.roman}</div>
+                <div className="text-[10px] text-accent">{h.en}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <p className="mt-3 text-[10px] italic text-muted-foreground">
+        Phrases are written as you asking the patient, in polite (আপনি) Bengali.
+      </p>
     </div>
   );
 }
