@@ -175,6 +175,9 @@ function ToolBody({ id }: { id: ToolId }) {
   if (id === "peds") return <PedsDoses />;
   if (id === "phrasebook") return <Phrasebook />;
   if (id === "drugs") return <DrugsRef />;
+  if (id === "chadsvasc") return <ChadsVasc />;
+  if (id === "abcd2") return <ABCD2 />;
+  if (id === "nihss") return <NIHSS />;
   return null;
 }
 
