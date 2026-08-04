@@ -108,19 +108,30 @@ function ToolsPage() {
           </div>
           <div>
             <h1 className="font-display text-xl text-foreground leading-tight">Clinical Bedside Tools</h1>
-            <p className="text-[11px] text-muted-foreground">Tidy 2-column tiles that expand into interactive calculators.</p>
+            <p className="text-[11px] text-muted-foreground">Quiet, offline calculators and references for the ward.</p>
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4">
+          <BentoTile
+            tool={TOOLS.find((t) => t.id === "phrasebook")!}
+            onOpen={() => setOpen("phrasebook")}
+            wide
+          />
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 items-stretch gap-3">
           {TOOLS.filter((t) => t.id !== "phrasebook" && t.id !== "drugs").map((t) => (
             <BentoTile key={t.id} tool={t} onOpen={() => setOpen(t.id)} />
           ))}
         </div>
-        <div className="mt-3 space-y-3">
-          {TOOLS.filter((t) => t.id === "phrasebook" || t.id === "drugs").map((t) => (
-            <BentoTile key={t.id} tool={t} onOpen={() => setOpen(t.id)} wide />
-          ))}
+
+        <div className="mt-3">
+          <BentoTile
+            tool={TOOLS.find((t) => t.id === "drugs")!}
+            onOpen={() => setOpen("drugs")}
+            wide
+          />
         </div>
       </div>
     </AppShell>
@@ -133,19 +144,20 @@ function BentoTile({ tool, onOpen, wide }: { tool: ToolMeta; onOpen: () => void;
     <button
       onClick={onOpen}
       className={cn(
-        "flex flex-col items-start rounded-3xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/40",
-        wide && "w-full",
+        "flex h-full flex-col items-start rounded-3xl border border-border bg-card px-4 py-3.5 text-left transition-colors hover:border-primary/40",
+        wide ? "w-full flex-row items-center gap-3" : "",
       )}
     >
-      <div className={cn("grid h-10 w-10 place-items-center rounded-xl", tool.tint)}>
+      <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl", tool.tint)}>
         <Icon className="h-5 w-5" />
       </div>
-      <div className="mt-3 font-display text-sm text-foreground leading-tight">{tool.title}</div>
-      <div className="mt-0.5 text-[11px] text-muted-foreground">{tool.blurb}</div>
-      <div className="mt-3 flex w-full items-center justify-end text-[10px] uppercase tracking-wider text-muted-foreground">
-        <span className="text-primary">Tap to open →</span>
+      <div className={cn("flex flex-col", wide ? "flex-1" : "mt-2.5 w-full flex-1")}>
+        <div className="font-display text-sm text-foreground leading-tight">{tool.title}</div>
+        <div className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{tool.blurb}</div>
       </div>
-
+      <div className={cn("text-[10px] text-primary", wide ? "shrink-0" : "mt-2.5 w-full text-right")}>
+        {wide ? "→" : "Tap to open →"}
+      </div>
     </button>
   );
 }
