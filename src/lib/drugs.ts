@@ -19,6 +19,10 @@ export const DRUG_CLASSES = [
   "Steroids",
   "Anticoagulants",
   "Neuro / Psych",
+  "Antivirals / Antiparasitics",
+  "TB Drugs",
+  "Vasopressors / Antidotes",
+  "Obstetrics",
   "Fluids / Electrolytes",
   "Others",
 ] as const;
