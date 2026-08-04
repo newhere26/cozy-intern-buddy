@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { PHRASEBOOK } from "@/lib/data";
+import { PHRASEBOOK, PHRASE_SYSTEMS, HELPER_WORDS } from "@/lib/phrasebook";
 import { DRUGS, DRUG_CLASSES } from "@/lib/drugs";
 import { cn } from "@/lib/utils";
 import {
