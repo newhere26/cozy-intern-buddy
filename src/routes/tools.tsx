@@ -6,6 +6,7 @@ import { DRUGS, DRUG_CLASSES } from "@/lib/drugs";
 import { cn } from "@/lib/utils";
 import {
   Activity,
+  Brain,
   ArrowLeftRight,
   ChevronLeft,
   ClipboardList,
