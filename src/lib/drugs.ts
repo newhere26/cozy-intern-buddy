@@ -19,6 +19,10 @@ export const DRUG_CLASSES = [
   "Steroids",
   "Anticoagulants",
   "Neuro / Psych",
+  "Antivirals / Antiparasitics",
+  "TB Drugs",
+  "Vasopressors / Antidotes",
+  "Obstetrics",
   "Fluids / Electrolytes",
   "Others",
 ] as const;
@@ -109,4 +113,60 @@ export const DRUGS: Drug[] = [
   { name: "Adrenaline", cls: "Others", dose: "1 mg IV Q3–5min in arrest; 0.5 mg IM anaphylaxis", route: "IV / IM", brands: ["Adrenaline Samarth", "Epipen", "Adrenor"] },
   { name: "Atropine", cls: "Others", dose: "0.6–1 mg IV Q3–5min (max 3 mg)", route: "IV", brands: ["Atropine Neon", "Tropine", "Atrosulf"] },
   { name: "Hydroxyzine / Pheniramine", cls: "Others", dose: "Pheniramine 22.75 mg IM/IV", route: "IV / IM / PO", brands: ["Avil", "Atarax", "Pherigan"] },
+
+  // Additional antibiotics
+  { name: "Cefotaxime", cls: "Antibiotics", dose: "1–2 g Q8H; peds 100 mg/kg/day divided Q8H", route: "IV / IM", brands: ["Taxim", "Omnatax", "Claforan"] },
+  { name: "Cloxacillin", cls: "Antibiotics", dose: "500 mg Q6H PO; 1–2 g Q6H IV", route: "PO / IV", brands: ["Bioclox", "Klox", "Cloxam"] },
+  { name: "Linezolid", cls: "Antibiotics", dose: "600 mg Q12H", route: "PO / IV", brands: ["Linospan", "Lizolid", "Zyvox"] },
+  { name: "Colistin", cls: "Antibiotics", dose: "9 MIU loading, then 4.5 MIU Q12H (renal adjusted)", route: "IV", brands: ["Xylistin", "Walcoli", "Colistimax"] },
+  { name: "Ofloxacin + Ornidazole", cls: "Antibiotics", dose: "200/500 mg BD", route: "PO", brands: ["O2", "Zanocin-OZ", "Oflox-OZ"] },
+  { name: "Nitrofurantoin", cls: "Antibiotics", dose: "100 mg BD × 5–7 days (uncomplicated UTI)", route: "PO", brands: ["Niftran", "Nitrofur", "Martifur"] },
+  { name: "Cotrimoxazole", cls: "Antibiotics", dose: "800/160 mg BD; PCP 15–20 mg/kg/day of TMP", route: "PO / IV", brands: ["Septran", "Bactrim", "Ciplin"] },
+
+  // Antivirals / antiparasitics
+  { name: "Acyclovir", cls: "Antivirals / Antiparasitics", dose: "800 mg 5×/day PO (zoster); 10 mg/kg Q8H IV (encephalitis)", route: "PO / IV", brands: ["Acivir", "Zovirax", "Ocuvir"] },
+  { name: "Oseltamivir", cls: "Antivirals / Antiparasitics", dose: "75 mg BD × 5 days; peds by weight bands", route: "PO", brands: ["Fluvir", "Tamiflu", "Antiflu"] },
+  { name: "Albendazole", cls: "Antivirals / Antiparasitics", dose: "400 mg single dose (>2 y); 15 mg/kg/day in NCC", route: "PO", brands: ["Zentel", "Bandy", "Albezole"] },
+  { name: "Ivermectin", cls: "Antivirals / Antiparasitics", dose: "200 mcg/kg single dose, repeat at 1–2 weeks in scabies", route: "PO", brands: ["Ivermectol", "Ivecop", "Scabovate"] },
+  { name: "Artesunate", cls: "Antivirals / Antiparasitics", dose: "2.4 mg/kg IV at 0, 12, 24 h then daily (severe malaria)", route: "IV / IM", brands: ["Falcigo", "Larinate", "Artesunate Ipca"] },
+  { name: "Chloroquine", cls: "Antivirals / Antiparasitics", dose: "600 mg base stat, 300 mg at 6, 24, 48 h (vivax)", route: "PO", brands: ["Lariago", "Nivaquine", "Emquin"] },
+  { name: "Primaquine", cls: "Antivirals / Antiparasitics", dose: "0.25 mg/kg/day × 14 days (vivax); check G6PD", route: "PO", brands: ["Malirid", "PMQ Ipca", "Primaquine Remedica"] },
+
+  // TB drugs
+  { name: "Rifampicin", cls: "TB Drugs", dose: "10 mg/kg OD (450–600 mg) empty stomach", route: "PO", brands: ["R-Cin", "Rifadin", "Akurit (FDC)"] },
+  { name: "Isoniazid", cls: "TB Drugs", dose: "5 mg/kg OD (max 300 mg) with pyridoxine", route: "PO", brands: ["Isokin", "Solonex", "Akurit (FDC)"] },
+  { name: "Pyrazinamide", cls: "TB Drugs", dose: "25 mg/kg OD", route: "PO", brands: ["Pyzina", "P-Zide", "Akurit-4 (FDC)"] },
+  { name: "Ethambutol", cls: "TB Drugs", dose: "15 mg/kg OD; watch colour vision", route: "PO", brands: ["Combutol", "Mycobutol", "Akurit-4 (FDC)"] },
+
+  // Vasopressors / antidotes
+  { name: "Noradrenaline", cls: "Vasopressors / Antidotes", dose: "0.05–0.5 mcg/kg/min infusion, titrate to MAP ≥65", route: "IV infusion", brands: ["Adrenor", "Noradrenaline Neon", "Norad Samarth"] },
+  { name: "Dopamine", cls: "Vasopressors / Antidotes", dose: "5–20 mcg/kg/min infusion", route: "IV infusion", brands: ["Dopamine Neon", "Intropin", "Dopacard"] },
+  { name: "Dobutamine", cls: "Vasopressors / Antidotes", dose: "2.5–20 mcg/kg/min infusion", route: "IV infusion", brands: ["Dobutrex", "Cardiject", "Dobustat"] },
+  { name: "Naloxone", cls: "Vasopressors / Antidotes", dose: "0.4–2 mg IV, repeat Q2–3min (max 10 mg)", route: "IV / IM", brands: ["Nalox", "Narcotan", "Naloxone Samarth"] },
+  { name: "Flumazenil", cls: "Vasopressors / Antidotes", dose: "0.2 mg IV over 15 s, repeat to max 1 mg", route: "IV", brands: ["Flumazen", "Zenil", "Anexate"] },
+  { name: "Protamine sulphate", cls: "Vasopressors / Antidotes", dose: "1 mg per 100 U heparin given in last hour (max 50 mg)", route: "IV", brands: ["Protamine Sulphate Samarth", "Prosulf"] },
+  { name: "N-acetylcysteine", cls: "Vasopressors / Antidotes", dose: "150 mg/kg over 1 h, 50 mg/kg over 4 h, 100 mg/kg over 16 h", route: "IV / PO", brands: ["Mucomix", "Fluimucil", "Acetadote"] },
+
+  // Obstetrics
+  { name: "Oxytocin", cls: "Obstetrics", dose: "10 U IM after delivery; 20 U in 500 mL infusion for PPH", route: "IV / IM", brands: ["Syntocinon", "Pitocin", "Oxytocin Neon"] },
+  { name: "Misoprostol", cls: "Obstetrics", dose: "600 mcg PO/SL for PPH; 800 mcg PR alternative", route: "PO / SL / PV / PR", brands: ["Misoprost", "Cytotec", "Zitotec"] },
+  { name: "Magnesium sulphate", cls: "Obstetrics", dose: "Pritchard: 4 g IV + 10 g IM, then 5 g IM Q4H", route: "IV / IM", brands: ["MgSO4 Neon", "Magneon", "Magsulf"] },
+  { name: "Labetalol (obstetric)", cls: "Obstetrics", dose: "20 mg IV, double Q10min to max 300 mg in severe hypertension", route: "IV", brands: ["Lobet", "Labebet", "Normadate"] },
+  { name: "Nifedipine", cls: "Obstetrics", dose: "10 mg PO, repeat Q20–30min (max 3 doses); 20 mg BD retard", route: "PO", brands: ["Depin", "Nicardia", "Calcigard"] },
+  { name: "Tranexamic acid (obstetric)", cls: "Obstetrics", dose: "1 g IV within 3 h of PPH onset, repeat once after 30 min", route: "IV", brands: ["Trapic", "Texakind", "Pause"] },
+
+  // Cardiac / diuretics additions
+  { name: "Spironolactone", cls: "Cardiac", dose: "25–50 mg OD (100 mg+ in ascites); watch K+", route: "PO", brands: ["Aldactone", "Spirono", "Lasilactone (FDC)"] },
+  { name: "Torsemide", cls: "Cardiac", dose: "10–20 mg OD, titrate", route: "PO / IV", brands: ["Dytor", "Tide", "Torsinex"] },
+  { name: "Ivabradine", cls: "Cardiac", dose: "5 mg BD, up to 7.5 mg BD", route: "PO", brands: ["Ivabrad", "Inapure", "Bradia"] },
+  { name: "Hydralazine", cls: "Antihypertensives", dose: "5–10 mg slow IV Q20–30min (max 20 mg)", route: "IV / PO", brands: ["Hydralazine Neon", "Nepresol", "Apresoline"] },
+
+  // Others / supportive
+  { name: "ORS (WHO low osmolarity)", cls: "Fluids / Electrolytes", dose: "75 mL/kg over 4 h in some dehydration; 10 mL/kg per loose stool", route: "PO", brands: ["ORS Electral", "Walyte", "Prolyte"] },
+  { name: "Zinc sulphate", cls: "Fluids / Electrolytes", dose: "20 mg OD × 14 days (10 mg if <6 months)", route: "PO", brands: ["Zinconia", "Zincovit-Z", "Z&D"] },
+  { name: "Sodium bicarbonate 7.5%", cls: "Fluids / Electrolytes", dose: "1 mEq/kg slow IV in severe acidosis / hyperkalaemia", route: "IV", brands: ["Soda Bicarb Neon", "Sodabic", "NaHCO3 Claris"] },
+  { name: "Iron + folic acid", cls: "Others", dose: "Elemental iron 100 mg + folic acid 500 mcg OD", route: "PO", brands: ["Autrin", "Fefol", "Livogen"] },
+  { name: "Vitamin B12 (Cyanocobalamin)", cls: "Others", dose: "1000 mcg IM alternate days × 5, then monthly", route: "IM / PO", brands: ["Neurobion Forte", "Optineuron", "Methycobal"] },
+  { name: "Thiamine", cls: "Others", dose: "100 mg IV OD; 500 mg TDS in Wernicke's", route: "IV / PO", brands: ["Benalgis", "Thiamine Neon", "Beplex Forte"] },
+  { name: "Salbutamol syrup", cls: "Respiratory", dose: "Peds 0.1 mg/kg/dose TDS (2 mg TDS at 2–6 y)", route: "PO", brands: ["Asthalin syrup", "Ventorlin syrup", "Salbetol"] },
 ];
