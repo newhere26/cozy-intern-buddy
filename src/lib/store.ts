@@ -55,6 +55,15 @@ export interface Todo {
   createdAt?: string;
 }
 
+export interface RotationReview {
+  felt: number; // 1-5
+  learned: number; // 1-5
+  pgInterest: number; // 1-5
+  note?: string;
+  at: string; // ISO
+}
+
+
 export interface AppState {
   onboarded: boolean;
   name: string;
@@ -87,7 +96,9 @@ export interface AppState {
   claimedDays: number;
   ownedItems: string[];
   equippedItems: string[];
+  rotationReviews: Record<string, RotationReview>;
 }
+
 
 const KEY = "serenity.v1";
 
@@ -122,7 +133,9 @@ const defaultState: AppState = {
   claimedDays: 0,
   ownedItems: [],
   equippedItems: [],
+  rotationReviews: {},
 };
+
 
 let state: AppState = load();
 const listeners = new Set<() => void>();
@@ -301,4 +314,16 @@ export function resetAll() {
   state = defaultState;
   persist();
   emit();
+}
+
+export function setRotationReview(
+  rotationId: string,
+  review: Omit<RotationReview, "at">,
+) {
+  setState((s) => ({
+    rotationReviews: {
+      ...s.rotationReviews,
+      [rotationId]: { ...review, at: new Date().toISOString() },
+    },
+  }));
 }

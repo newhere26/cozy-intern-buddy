@@ -5,12 +5,17 @@ import { toKey } from "@/lib/date";
 import { pickMealLine } from "@/lib/companion-lines";
 import { cn } from "@/lib/utils";
 
+const tap =
+  "active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card";
+
 export function WellnessTile({
   open,
   onToggle,
+  className,
 }: {
   open: boolean;
   onToggle: () => void;
+  className?: string;
 }) {
   const app = useApp();
   const today = toKey(new Date());
@@ -18,14 +23,21 @@ export function WellnessTile({
   const mealsToday = app.meals[today] ?? [];
 
   return (
-    <div className="rounded-3xl bg-card p-4 shadow-sm transition-all">
-      <button onClick={onToggle} className="flex w-full items-start justify-between">
-        <div className="flex items-center gap-2">
-          <Droplet className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">Wellness</span>
+    <div className={cn("rounded-3xl bg-card p-4 shadow-sm transition-all", className)}>
+
+      <button
+        onClick={onToggle}
+        className={cn("flex w-full items-start justify-between", tap)}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <Droplet className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="truncate text-sm font-medium text-foreground">Wellness</span>
         </div>
         <ChevronDown
-          className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")}
+          className={cn(
+            "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+            open && "rotate-180",
+          )}
         />
       </button>
 
@@ -70,14 +82,15 @@ function Expanded() {
   };
 
   return (
-    <div className="mt-4 space-y-3">
-      <div className="flex rounded-full bg-secondary/60 p-0.5">
+    <div className="mt-4 max-h-[60svh] space-y-3 overflow-y-auto overscroll-contain pr-0.5">
+      <div className="flex rounded-full bg-secondary/60 p-1">
         {(["hydrate", "nourish"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cn(
-              "flex-1 rounded-full py-1 text-xs font-medium capitalize",
+              "min-h-10 flex-1 rounded-full text-xs font-medium capitalize",
+              tap,
               tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground",
             )}
           >
@@ -89,34 +102,69 @@ function Expanded() {
       {tab === "hydrate" ? (
         <div className="flex flex-col items-center gap-3 py-2">
           <div className="relative h-28 w-24 overflow-hidden rounded-b-3xl rounded-t-lg border-2 border-border bg-secondary/30">
+            {/* water body */}
             <div
-              key={splash}
-              className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-sky-400/70 to-cyan-300/60 transition-all duration-500 ease-out water-wave"
+              className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-sky-400/70 to-cyan-300/60 transition-[height] duration-700 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]"
               style={{ height: `${Math.min(100, water * 12.5)}%` }}
-            />
+            >
+              {/* surface shimmer */}
+              <div className="absolute -top-1 left-0 h-2 w-[200%] rounded-full bg-cyan-200/50 water-wave" />
+              {splash > 0 && (
+                <>
+                  <span
+                    key={`b1-${splash}`}
+                    className="absolute bottom-1 left-1/3 h-1.5 w-1.5 rounded-full bg-white/60 bubble-up"
+                  />
+                  <span
+                    key={`b2-${splash}`}
+                    className="absolute bottom-0 left-2/3 h-1 w-1 rounded-full bg-white/50 bubble-up [animation-delay:300ms]"
+                  />
+                </>
+              )}
+            </div>
+
+            {/* falling droplets */}
+            {splash > 0 && (
+              <div key={`drops-${splash}`} className="pointer-events-none absolute inset-0">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="absolute top-3 h-2.5 w-2 rounded-[50%_50%_50%_50%/60%_60%_40%_40%] bg-sky-200/90 droplet-fall"
+                    style={{
+                      left: `${34 + i * 16}%`,
+                      animationDelay: `${i * 130}ms`,
+                    }}
+                  />
+                ))}
+                <span
+                  className="absolute h-4 w-4 rounded-full border border-cyan-100/70 splash-ring"
+                  style={{ left: "50%", bottom: `${Math.min(100, water * 12.5)}%` }}
+                />
+              </div>
+            )}
+
             <div className="absolute inset-0 flex items-center justify-center font-display text-3xl text-foreground drop-shadow">
               {water}
             </div>
-            {splash > 0 && (
-              <span
-                key={`drop-${splash}`}
-                className="pointer-events-none absolute left-1/2 top-2 -translate-x-1/2 text-2xl droplet-fall"
-              >
-                💧
-              </span>
-            )}
           </div>
-          <div className="flex w-full items-center justify-center gap-3">
+
+          <div className="grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
             <button
               onClick={() => bumpWater(today, -1)}
-              className="grid h-11 w-11 place-items-center rounded-full border border-border bg-secondary/60 text-foreground active:scale-95 transition-transform"
+              className={cn(
+                "grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-secondary/60 text-foreground",
+                tap,
+              )}
               aria-label="One less glass"
             >
-              <Minus className="h-4 w-4" />
+              <Minus className="h-5 w-5" />
             </button>
             <button
               onClick={addWater}
-              className="min-h-11 flex-1 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm active:scale-95 transition-transform"
+              className={cn(
+                "min-h-12 w-full rounded-full bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-sm",
+                tap,
+              )}
             >
               +1 glass
             </button>
@@ -124,13 +172,14 @@ function Expanded() {
         </div>
       ) : (
         <div className="space-y-2.5">
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-2 gap-2 min-[360px]:grid-cols-4">
             {(["breakfast", "lunch", "dinner", "snack"] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMealType(m)}
                 className={cn(
-                  "min-h-9 rounded-full px-1 text-[11px] capitalize transition-colors",
+                  "min-h-11 w-full truncate rounded-full px-2 text-[11px] capitalize",
+                  tap,
                   mealType === m
                     ? "bg-primary font-semibold text-primary-foreground"
                     : "border border-border bg-secondary/50 text-foreground",
@@ -140,18 +189,21 @@ function Expanded() {
               </button>
             ))}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="what you ate (optional)"
-              className="min-h-10 flex-1 rounded-full border border-border bg-background px-3 text-xs"
+              className="min-h-11 w-full rounded-2xl border border-border bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             />
             <button
               onClick={saveMeal}
-              className="flex min-h-10 shrink-0 items-center gap-1 rounded-full bg-primary px-3.5 text-xs font-semibold text-primary-foreground active:scale-95 transition-transform"
+              className={cn(
+                "flex min-h-11 w-full items-center justify-center gap-1 rounded-full bg-primary px-3 text-xs font-semibold text-primary-foreground",
+                tap,
+              )}
             >
-              <Plus className="h-3.5 w-3.5" /> Add
+              <Plus className="h-4 w-4" /> Add meal
             </button>
           </div>
           {mealMsg && (
@@ -168,11 +220,13 @@ function Expanded() {
             {meals.map((m) => (
               <div
                 key={m.id}
-                className="flex items-center justify-between rounded-xl bg-secondary/40 px-3 py-1.5 text-[11px]"
+                className="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2 text-[11px]"
               >
-                <Utensils className="h-3 w-3 text-muted-foreground" />
-                <span className="flex-1 pl-2 capitalize text-foreground">{m.type}</span>
-                <span className="text-muted-foreground">{m.note ?? ""}</span>
+                <Utensils className="h-3 w-3 shrink-0 text-muted-foreground" />
+                <span className="shrink-0 capitalize text-foreground">{m.type}</span>
+                <span className="min-w-0 flex-1 truncate text-right text-muted-foreground">
+                  {m.note ?? ""}
+                </span>
               </div>
             ))}
           </div>

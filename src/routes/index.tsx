@@ -107,12 +107,15 @@ function Home() {
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <CalendarTile />
+          {openTile !== "well" && <CalendarTile />}
           <WellnessTile
+            className={openTile === "well" ? "col-span-2" : undefined}
             open={openTile === "well"}
             onToggle={() => setOpenTile(openTile === "well" ? null : "well")}
           />
+          {openTile === "well" && <CalendarTile />}
         </div>
+
 
         <div className="mt-3">
           <ProcedureTile

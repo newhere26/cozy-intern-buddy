@@ -44,6 +44,20 @@ function RelaxationPage() {
   const [count, setCount] = useState<number>(PATTERNS.box.in);
   const [running, setRunning] = useState(false);
   const [totalSec, setTotalSec] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+
+  // Start every run collapsed, then grow on the next frame so the very first
+  // inhale visibly expands the circle.
+  useEffect(() => {
+    if (!running) {
+      setExpanded(false);
+      return;
+    }
+    setExpanded(false);
+    const id = requestAnimationFrame(() => setExpanded(true));
+    return () => cancelAnimationFrame(id);
+  }, [running]);
+
 
   useEffect(() => {
     if (!running) return;
@@ -73,7 +87,12 @@ function RelaxationPage() {
 
   const label =
     phase === "in" ? "Breathe in" : phase === "out" ? "Breathe out" : "Hold";
-  const scale = phase === "in" ? 1 : phase === "out" ? 0.5 : phase === "hold" ? 1 : 0.5;
+  const scale = !running || !expanded
+    ? 0.5
+    : phase === "in" || phase === "hold"
+      ? 1
+      : 0.5;
+
   const p = PATTERNS[pattern];
   const mins = Math.floor(totalSec / 60);
   const secs = totalSec % 60;
