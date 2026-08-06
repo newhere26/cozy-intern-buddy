@@ -248,3 +248,57 @@
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
 }
+
+/* ---- cozy water logging animation ---- */
+@keyframes droplet-fall {
+  0% { transform: translate(-50%, -140%) scale(0.6); opacity: 0; }
+  15% { opacity: 1; }
+  70% { transform: translate(-50%, 40%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, 70%) scale(0.5); opacity: 0; }
+}
+@keyframes droplet-wobble {
+  0%, 100% { margin-left: -4px; }
+  50% { margin-left: 4px; }
+}
+@keyframes splash-ring {
+  0% { transform: translateX(-50%) scale(0.2); opacity: 0.9; }
+  100% { transform: translateX(-50%) scale(2.2); opacity: 0; }
+}
+@keyframes bubble-up {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  20% { opacity: 0.8; }
+  100% { transform: translateY(-52px) scale(1); opacity: 0; }
+}
+@keyframes water-wave {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
+@utility droplet-fall {
+  animation: droplet-fall 900ms cubic-bezier(0.45, 0, 0.55, 1) forwards;
+}
+@utility droplet-wobble {
+  animation: droplet-wobble 700ms ease-in-out infinite;
+}
+@utility splash-ring {
+  animation: splash-ring 700ms ease-out 700ms forwards;
+}
+@utility bubble-up {
+  animation: bubble-up 1.6s ease-out forwards;
+}
+@utility water-wave {
+  animation: water-wave 3.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .droplet-fall,
+  .droplet-wobble,
+  .splash-ring,
+  .bubble-up,
+  .water-wave,
+  .breathe,
+  .float-slow {
+    animation: none !important;
+  }
+}
+

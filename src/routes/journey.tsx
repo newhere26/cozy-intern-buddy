@@ -5,8 +5,11 @@ import { claimCredits, purchaseItem, toggleEquip, useApp } from "@/lib/store";
 import { fmtDate, fullyCompletedWeeks, daysSince } from "@/lib/date";
 import { postingColor, rotationForDate } from "@/lib/postings";
 import { STORE } from "@/lib/store-items";
+import { PostingReview } from "@/components/PostingReview";
+import { buildAchievements } from "@/lib/achievements";
 import { ChevronDown, Coins } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/journey")({
   head: () => ({
@@ -23,7 +26,7 @@ function JourneyPage() {
   const done = fullyCompletedWeeks(app.startDate);
   const pct = Math.min(100, (done / app.durationWeeks) * 100);
 
-  const [open, setOpen] = useState<"leaves" | "proc" | "post" | "store" | null>("leaves");
+  const [open, setOpen] = useState<"leaves" | "proc" | "post" | "ach" | "store" | null>("leaves");
 
   return (
     <AppShell>
@@ -70,6 +73,16 @@ function JourneyPage() {
         >
           <PostingsPanel expanded={open === "post"} />
         </Collapsible>
+
+        <Collapsible
+          title="Achievements"
+          open={open === "ach"}
+          onToggle={() => setOpen(open === "ach" ? null : "ach")}
+        >
+          <AchievementsPanel />
+        </Collapsible>
+
+
 
         <Collapsible
           title="Store · Credits"
@@ -304,12 +317,66 @@ function PostingsPanel({ expanded }: { expanded: boolean }) {
               {fmtDate(r.start, app.country)} – {fmtDate(r.end, app.country)}
               {i === anchor && " · current"}
             </div>
+            {r.end < today && <PostingReview rotation={r} />}
           </div>
         );
       })}
     </div>
   );
 }
+
+function AchievementsPanel() {
+  const app = useApp();
+  const items = buildAchievements(app);
+  const earned = items.filter((a) => a.earned);
+  const locked = items.filter((a) => !a.earned);
+
+  return (
+    <div className="space-y-3">
+      <div className="text-[11px] text-muted-foreground">
+        {earned.length} of {items.length} collected — no rush.
+      </div>
+      <div className="space-y-1.5">
+        {earned.map((a) => (
+          <div
+            key={a.id}
+            className="flex items-start gap-2.5 rounded-2xl bg-secondary/40 px-3 py-2"
+          >
+            <span className="text-lg leading-none">{a.emoji}</span>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-medium text-foreground">{a.title}</div>
+              <div className="text-[10px] text-muted-foreground">{a.line}</div>
+            </div>
+            {a.meta && (
+              <span className="shrink-0 text-[10px] text-muted-foreground">
+                {fmtDate(a.meta, app.country)}
+              </span>
+            )}
+          </div>
+        ))}
+        {earned.length === 0 && (
+          <p className="text-[11px] text-muted-foreground">
+            Nothing yet — the first ones come quietly.
+          </p>
+        )}
+      </div>
+      {locked.length > 0 && (
+        <Group title={`Still ahead (${locked.length})`}>
+          {locked.map((a) => (
+            <div key={a.id} className="flex items-start gap-2.5 py-0.5 opacity-50">
+              <span className="text-base leading-none grayscale">{a.emoji}</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs text-foreground">{a.title}</div>
+                <div className="text-[10px] text-muted-foreground">{a.line}</div>
+              </div>
+            </div>
+          ))}
+        </Group>
+      )}
+    </div>
+  );
+}
+
 
 function StorePanel() {
   const app = useApp();

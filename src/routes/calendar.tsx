@@ -13,6 +13,8 @@ import type { DayStatus } from "@/lib/store";
 import { WEEKDAYS, fmtShort, monthLabel, monthMatrix, toKey } from "@/lib/date";
 import { canLogAttendance } from "@/lib/shift";
 import { postingColor } from "@/lib/postings";
+import { PostingReview } from "@/components/PostingReview";
+
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/calendar")({
@@ -238,7 +240,9 @@ function CalendarPage() {
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
+                    {r.end < today && <PostingReview rotation={r} />}
                   </div>
+
                 );
               })}
             </div>
