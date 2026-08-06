@@ -11,9 +11,11 @@ const tap =
 export function WellnessTile({
   open,
   onToggle,
+  className,
 }: {
   open: boolean;
   onToggle: () => void;
+  className?: string;
 }) {
   const app = useApp();
   const today = toKey(new Date());
@@ -21,7 +23,8 @@ export function WellnessTile({
   const mealsToday = app.meals[today] ?? [];
 
   return (
-    <div className="rounded-3xl bg-card p-4 shadow-sm transition-all">
+    <div className={cn("rounded-3xl bg-card p-4 shadow-sm transition-all", className)}>
+
       <button
         onClick={onToggle}
         className={cn("flex w-full items-start justify-between", tap)}
