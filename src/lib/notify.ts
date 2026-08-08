@@ -144,6 +144,8 @@ export function scheduleDailyCare(opts: {
   name?: string;
   attendanceOpensAt?: string; // "HH:MM" midpoint of shift
   attendanceLogged?: boolean;
+  hydrated?: boolean;
+  mealsLogged?: string[];
 }) {
   cancelByPrefix("care:");
 
@@ -151,7 +153,8 @@ export function scheduleDailyCare(opts: {
   const entries: QueueEntry[] = [];
 
   // Hydration through the waking day
-  [9, 12, 15, 18, 21].forEach((h, i) => {
+  const hydrationHours = opts.hydrated ? [] : [9, 12, 15, 18, 21];
+  hydrationHours.forEach((h, i) => {
     entries.push({
       id: `care:water:${h}`,
       title: "A little water?",
@@ -166,6 +169,7 @@ export function scheduleDailyCare(opts: {
     ["lunch", 13, 30],
     ["dinner", 20, 30],
   ] as const).forEach(([meal, h, m]) => {
+    if (opts.mealsLogged?.includes(meal)) return;
     entries.push({
       id: `care:meal:${meal}`,
       title: "Something to eat",
