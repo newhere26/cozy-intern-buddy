@@ -5,8 +5,42 @@ import { cn } from "@/lib/utils";
 
 export const FELT_EMOJI = ["😞", "😕", "😐", "🙂", "😄"];
 
+const FELT_LABEL = ["rough", "heavy", "okay", "good", "great"];
+
+/** Drawn 5-point smiley scale: mouth curve and colour shift with the score. */
+export function SmileyFace({ score, className }: { score: number; className?: string }) {
+  const n = Math.min(5, Math.max(1, score));
+  // -6 (frown) .. +6 (smile)
+  const curve = (n - 3) * 3;
+  const tone = [
+    "text-rose-300",
+    "text-orange-300",
+    "text-amber-200",
+    "text-lime-300",
+    "text-emerald-300",
+  ][n - 1];
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={cn("h-6 w-6", tone, className)}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="9" cy="10" r="1.15" fill="currentColor" />
+      <circle cx="15" cy="10" r="1.15" fill="currentColor" />
+      <path
+        d={`M8 ${15 - curve / 6} Q12 ${15 + curve} 16 ${15 - curve / 6}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function reviewSummary(r: { felt: number; learned: number; pgInterest: number }) {
-  return `${FELT_EMOJI[r.felt - 1] ?? "🙂"} · learned ${r.learned}/5 · PG ${r.pgInterest}/5`;
+  return `${FELT_LABEL[r.felt - 1] ?? "okay"} · learned ${r.learned}/5 · PG ${r.pgInterest}/5`;
 }
 
 export function isFinished(rot: Rotation, today: string) {
@@ -17,12 +51,12 @@ function Scale({
   label,
   value,
   onChange,
-  emoji,
+  smiley,
 }: {
   label: string;
   value: number;
   onChange: (n: number) => void;
-  emoji?: boolean;
+  smiley?: boolean;
 }) {
   return (
     <div>
@@ -34,14 +68,14 @@ function Scale({
             type="button"
             onClick={() => onChange(n)}
             className={cn(
-              "min-h-11 rounded-xl border text-sm transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+              "flex min-h-11 items-center justify-center rounded-xl border text-sm transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
               value === n
                 ? "border-primary bg-primary/25 text-foreground"
                 : "border-border bg-secondary/40 text-muted-foreground",
             )}
             aria-label={`${label}: ${n} of 5`}
           >
-            {emoji ? FELT_EMOJI[n - 1] : n}
+            {smiley ? <SmileyFace score={n} /> : n}
           </button>
         ))}
       </div>
@@ -64,14 +98,21 @@ export function PostingReview({ rotation }: { rotation: Rotation }) {
         onClick={() => setOpen(true)}
         className="mt-2 w-full rounded-full border border-border/70 bg-background/40 px-3 py-2 text-[11px] text-foreground transition-transform active:scale-95"
       >
-        {existing ? reviewSummary(existing) + " · edit" : "How was this posting?"}
+        {existing ? (
+          <span className="flex items-center justify-center gap-1.5">
+            <SmileyFace score={existing.felt} className="h-4 w-4" />
+            {reviewSummary(existing)} · edit
+          </span>
+        ) : (
+          "How was this posting?"
+        )}
       </button>
     );
   }
 
   return (
     <div className="mt-2 space-y-2.5 rounded-2xl bg-background/50 p-3">
-      <Scale label="How did it feel?" value={felt} onChange={setFelt} emoji />
+      <Scale label="How did it feel?" value={felt} onChange={setFelt} smiley />
       <Scale label="How much did you learn?" value={learned} onChange={setLearned} />
       <Scale label="Pick this for PG?" value={pg} onChange={setPg} />
       <input
