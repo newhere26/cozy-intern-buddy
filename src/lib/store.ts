@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-export type CompanionId = "capybara" | "redpanda" | "cow" | "turtle" | "owl";
+export type CompanionId = "capybara" | "cow" | "owl";
 export type ThemeId = "sage" | "lavender" | "rose" | "ocean" | "cocoa" | "mist";
 export type DayStatus = "present" | "cl" | "pl" | "absent";
 export type Supervision = "observed" | "assisted" | "independent";
@@ -145,7 +145,12 @@ function load(): AppState {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultState;
-    return { ...defaultState, ...JSON.parse(raw) };
+    const parsed = { ...defaultState, ...JSON.parse(raw) } as AppState;
+    // Retired companions fall back to the capybara.
+    if (!["capybara", "cow", "owl"].includes(parsed.companion)) {
+      parsed.companion = "capybara";
+    }
+    return parsed;
   } catch {
     return defaultState;
   }
@@ -326,4 +331,25 @@ export function setRotationReview(
       [rotationId]: { ...review, at: new Date().toISOString() },
     },
   }));
+}
+
+/**
+ * Days older than two weeks that were never logged are assumed present,
+ * so nobody loses credit for forgetting. Leaves/absences are never touched.
+ */
+export function backfillPresentDays() {
+  const s = state;
+  if (!s.onboarded || !s.startDate) return;
+  const cutoff = new Date();
+  cutoff.setHours(0, 0, 0, 0);
+  cutoff.setDate(cutoff.getDate() - 14);
+  const start = new Date(s.startDate + "T00:00:00");
+  if (Number.isNaN(start.getTime())) return;
+  const patch: Record<string, DayEntry> = {};
+  for (const d = new Date(start); d <= cutoff; d.setDate(d.getDate() + 1)) {
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (!s.days[key]) patch[key] = { status: "present" };
+  }
+  if (Object.keys(patch).length === 0) return;
+  setState((cur) => ({ days: { ...patch, ...cur.days } }));
 }

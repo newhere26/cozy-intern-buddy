@@ -123,7 +123,7 @@ function OnboardingPage() {
             <input
               value={app.college}
               onChange={(e) => setState({ college: e.target.value })}
-              placeholder="e.g. R. G. Kar Medical College"
+              placeholder="e.g. City Medical College"
               className="mt-1 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
             />
           </Field>
