@@ -107,3 +107,97 @@ export function scheduleTodoLadder(id: string, text: string) {
 export function cancelTodoLadder(id: string) {
   cancelByPrefix(`todo:${id}:`);
 }
+
+// ---- Daily cozy reminders (hydration, meals, attendance) ----
+
+const HYDRATION_LINES = [
+  "A few sips for me? Your future self says thanks. 💧",
+  "Water break, doctor. Just one glass. 🫧",
+  "Hydration check — the ward can wait 20 seconds. 💧",
+  "Sip sip. I'm holding your glass. 🥤",
+  "One glass of water, and I'll stop nagging. Promise. 💧",
+];
+
+const MEAL_LINES: Record<string, string> = {
+  breakfast: "Morning, doctor. Something warm before rounds? 🍵",
+  lunch: "Lunch-ish o'clock. Even five bites count. 🍲",
+  dinner: "Did you eat tonight? Sit for a minute with me. 🍛",
+};
+
+function pick<T>(arr: T[], seed: number) {
+  return arr[Math.abs(seed) % arr.length];
+}
+
+function todayAt(hh: number, mm = 0) {
+  const d = new Date();
+  d.setHours(hh, mm, 0, 0);
+  return d.getTime();
+}
+
+function futureOnly(entries: QueueEntry[]) {
+  const now = Date.now();
+  return entries.filter((e) => e.at > now + 30_000);
+}
+
+/** Reschedules today's hydration + meal + attendance nudges. Safe to call on app open. */
+export function scheduleDailyCare(opts: {
+  name?: string;
+  attendanceOpensAt?: string; // "HH:MM" midpoint of shift
+  attendanceLogged?: boolean;
+}) {
+  cancelByPrefix("care:");
+
+  const who = opts.name ? `Dr. ${opts.name}` : "doctor";
+  const entries: QueueEntry[] = [];
+
+  // Hydration through the waking day
+  [9, 12, 15, 18, 21].forEach((h, i) => {
+    entries.push({
+      id: `care:water:${h}`,
+      title: "A little water?",
+      body: pick(HYDRATION_LINES, h + i),
+      at: todayAt(h, 30),
+    });
+  });
+
+  // Meals
+  ([
+    ["breakfast", 8, 30],
+    ["lunch", 13, 30],
+    ["dinner", 20, 30],
+  ] as const).forEach(([meal, h, m]) => {
+    entries.push({
+      id: `care:meal:${meal}`,
+      title: "Something to eat",
+      body: MEAL_LINES[meal] ?? "Please eat something. 🍲",
+      at: todayAt(h, m),
+    });
+  });
+
+  // Attendance: just after logging unlocks, plus an evening catch-all
+  if (!opts.attendanceLogged) {
+    if (opts.attendanceOpensAt) {
+      const [h, m] = opts.attendanceOpensAt.split(":").map(Number);
+      if (!Number.isNaN(h)) {
+        entries.push({
+          id: "care:attendance:open",
+          title: "Attendance",
+          body: `Halfway through, ${who}. Want to mark today in the calendar? 🗓️`,
+          at: todayAt(h, (m ?? 0) + 15),
+        });
+      }
+    }
+    entries.push({
+      id: "care:attendance:evening",
+      title: "Attendance",
+      body: `Before you rest, ${who} — today isn't marked yet. Takes one tap. 🌙`,
+      at: todayAt(21, 30),
+    });
+  }
+
+  schedule(futureOnly(entries));
+}
+
+export function cancelCareReminder(kind: "water" | "meal" | "attendance") {
+  cancelByPrefix(`care:${kind}`);
+}
