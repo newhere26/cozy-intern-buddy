@@ -1,15 +1,11 @@
 import type { CompanionId, ThemeId } from "./store";
 import capybara from "@/assets/companions/capybara.png";
-import redpanda from "@/assets/companions/redpanda.png";
 import cow from "@/assets/companions/cow.png";
-import turtle from "@/assets/companions/turtle.png";
 import owl from "@/assets/companions/owl.png";
 
 export const COMPANIONS: { id: CompanionId; name: string; img: string; blurb: string }[] = [
   { id: "capybara", name: "Capybara", img: capybara, blurb: "unbothered, mellow, always here" },
-  { id: "redpanda", name: "Red Panda", img: redpanda, blurb: "small hands, big heart" },
   { id: "cow", name: "Cow", img: cow, blurb: "soft, steady, patient" },
-  { id: "turtle", name: "Turtle", img: turtle, blurb: "slow is a valid pace" },
   { id: "owl", name: "Owl", img: owl, blurb: "quiet company for late shifts" },
 ];
 
