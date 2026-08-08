@@ -3,6 +3,70 @@ import type { CompanionId } from "@/lib/store";
 import { STORE, activeMilestones } from "@/lib/store-items";
 import { cn } from "@/lib/utils";
 
+type Slot = "head" | "eyes" | "neck" | "body" | "hand" | "beside";
+
+interface Anchor {
+  /** horizontal centre, % of container width */
+  x: number;
+  /** vertical centre, % of container height */
+  y: number;
+  /** glyph size in cqw (% of container width) */
+  size: number;
+  rotate?: number;
+}
+
+/**
+ * Per-companion anchor points so accessories sit anatomically:
+ * head on the crown, eyewear across the eyes, neck items under the chin,
+ * hand items at the paw, gown over the torso, props on the ground beside.
+ */
+const ANCHORS: Record<CompanionId, Record<Slot, Anchor>> = {
+  capybara: {
+    head: { x: 50, y: 13, size: 26, rotate: -6 },
+    eyes: { x: 50, y: 30, size: 20 },
+    neck: { x: 50, y: 47, size: 22 },
+    body: { x: 50, y: 66, size: 40 },
+    hand: { x: 76, y: 71, size: 20, rotate: 8 },
+    beside: { x: 96, y: 90, size: 20 },
+  },
+  cow: {
+    head: { x: 50, y: 11, size: 24, rotate: -5 },
+    eyes: { x: 50, y: 28, size: 19 },
+    neck: { x: 50, y: 46, size: 22 },
+    body: { x: 50, y: 65, size: 40 },
+    hand: { x: 78, y: 72, size: 19, rotate: 8 },
+    beside: { x: 96, y: 90, size: 20 },
+  },
+  owl: {
+    head: { x: 50, y: 9, size: 27, rotate: -4 },
+    eyes: { x: 50, y: 27, size: 21 },
+    neck: { x: 50, y: 44, size: 21 },
+    body: { x: 50, y: 63, size: 38 },
+    hand: { x: 79, y: 70, size: 18, rotate: 10 },
+    beside: { x: 96, y: 90, size: 20 },
+  },
+};
+
+/** Some glyphs read visually larger/smaller than others at the same font-size. */
+const GLYPH_SCALE: Record<string, number> = {
+  "🩺": 1.05,
+  "🥼": 1.15,
+  "🎓": 1.0,
+  "📜": 0.9,
+  "👑": 0.85,
+  "🧢": 1.0,
+  "🧻": 0.8,
+  "🕶️": 0.95,
+  "🪙": 0.6,
+  "🧣": 1.0,
+  "🏅": 0.75,
+  "☕": 0.9,
+  "📕": 0.85,
+  "🍩": 0.75,
+  "🪴": 1.1,
+  "🎂": 1.0,
+};
+
 export function Companion({
   id,
   className,
@@ -21,6 +85,7 @@ export function Companion({
   completedWeeks?: number;
 }) {
   const c = COMPANIONS.find((x) => x.id === id) ?? COMPANIONS[0];
+  const anchors = ANCHORS[c.id] ?? ANCHORS.capybara;
   const dims =
     size === "lg" ? "h-full w-full" : size === "md" ? "h-24 w-24" : "h-12 w-12";
 
@@ -28,7 +93,7 @@ export function Companion({
   const milestones = activeMilestones(completedWeeks);
 
   // Map milestone → slot so it's worn anatomically
-  const MILESTONE_SLOT: Record<string, "neck" | "body" | "head" | "hand"> = {
+  const MILESTONE_SLOT: Record<string, Slot> = {
     "3-month stethoscope": "neck",
     "6-month gown": "body",
     "9-month cap": "head",
@@ -36,24 +101,43 @@ export function Companion({
   };
 
   // Shop items win over milestones on the same slot
-  const takenSlots = new Set(shopItems.map((it) => it.slot));
+  const takenSlots = new Set(shopItems.map((it) => it.slot as Slot));
   const milestoneOverlays = milestones
     .map((m) => ({ ...m, slot: MILESTONE_SLOT[m.label] }))
     .filter((m) => m.slot && !takenSlots.has(m.slot));
 
-  const slotClass = (slot: string) =>
-    cn(
-      "pointer-events-none absolute z-20 drop-shadow",
-      slot === "head" && "left-1/2 top-[-4%] -translate-x-1/2 text-4xl",
-      slot === "eyes" && "left-1/2 top-[28%] -translate-x-1/2 text-2xl",
-      slot === "neck" && "left-1/2 top-[48%] -translate-x-1/2 text-3xl",
-      slot === "body" && "left-1/2 top-[55%] -translate-x-1/2 text-5xl opacity-90",
-      slot === "hand" && "right-[6%] bottom-[26%] text-3xl",
-      slot === "beside" && "right-[-4%] bottom-2 text-3xl",
-    );
+  const worn = [
+    ...milestoneOverlays.map((m) => ({
+      key: m.label,
+      title: m.label,
+      emoji: m.emoji,
+      slot: m.slot as Slot,
+    })),
+    ...shopItems.map((it) => ({
+      key: it.id,
+      title: it.name,
+      emoji: it.emoji,
+      slot: it.slot as Slot,
+    })),
+  ];
+
+  const glyphStyle = (slot: Slot, emoji: string) => {
+    const a = anchors[slot] ?? anchors.head;
+    const scale = GLYPH_SCALE[emoji] ?? 1;
+    return {
+      left: `${a.x}%`,
+      top: `${a.y}%`,
+      fontSize: `${a.size * scale}cqw`,
+      lineHeight: 1,
+      transform: `translate(-50%, -50%) rotate(${a.rotate ?? 0}deg)`,
+    } as const;
+  };
 
   return (
-    <div className={cn("relative", dims, className)}>
+    <div
+      className={cn("relative", dims, className)}
+      style={{ containerType: "inline-size" }}
+    >
       {/* Night lamp glow behind companion */}
       {night && (
         <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2">
@@ -71,21 +155,22 @@ export function Companion({
 
       {overlays && (
         <>
-          {/* Milestone accessories worn on the companion */}
-          {milestoneOverlays.map((m) => (
-            <span key={m.label} title={m.label} className={slotClass(m.slot!)}>
-              {m.emoji}
-            </span>
-          ))}
-          {/* Shop items */}
-          {shopItems.map((it) => (
-            <span key={it.id} title={it.name} className={slotClass(it.slot)}>
-              {it.emoji}
+          {worn.map((w) => (
+            <span
+              key={w.key}
+              title={w.title}
+              className="pointer-events-none absolute z-20 select-none drop-shadow"
+              style={glyphStyle(w.slot, w.emoji)}
+            >
+              {w.emoji}
             </span>
           ))}
           {/* Night coffee */}
           {night && !takenSlots.has("hand") && (
-            <span className="pointer-events-none absolute right-[6%] bottom-[26%] z-20 text-3xl drop-shadow">
+            <span
+              className="pointer-events-none absolute z-20 select-none drop-shadow"
+              style={glyphStyle("hand", "☕")}
+            >
               ☕
             </span>
           )}
