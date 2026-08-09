@@ -1,6 +1,6 @@
 import { COMPANIONS } from "@/lib/data";
 import type { CompanionId } from "@/lib/store";
-import { STORE, activeMilestones } from "@/lib/store-items";
+import { activeMilestones } from "@/lib/store-items";
 import { cn } from "@/lib/utils";
 
 type Slot = "head" | "eyes" | "neck" | "body" | "hand" | "beside";
@@ -73,23 +73,23 @@ export function Companion({
   size = "lg",
   overlays = false,
   night = false,
-  equippedItems = [],
   completedWeeks = 0,
+  backdropUrl,
 }: {
   id: CompanionId;
   className?: string;
   size?: "sm" | "md" | "lg";
   overlays?: boolean;
   night?: boolean;
-  equippedItems?: string[];
   completedWeeks?: number;
+  /** Artwork shown softly behind the companion */
+  backdropUrl?: string;
 }) {
   const c = COMPANIONS.find((x) => x.id === id) ?? COMPANIONS[0];
   const anchors = ANCHORS[c.id] ?? ANCHORS.capybara;
   const dims =
     size === "lg" ? "h-full w-full" : size === "md" ? "h-24 w-24" : "h-12 w-12";
 
-  const shopItems = STORE.filter((s) => equippedItems.includes(s.id));
   const milestones = activeMilestones(completedWeeks);
 
   // Map milestone → slot so it's worn anatomically
@@ -100,26 +100,18 @@ export function Companion({
     "12-month diploma": "hand",
   };
 
-  // Shop items win over milestones on the same slot
-  const takenSlots = new Set(shopItems.map((it) => it.slot as Slot));
   const milestoneOverlays = milestones
     .map((m) => ({ ...m, slot: MILESTONE_SLOT[m.label] }))
-    .filter((m) => m.slot && !takenSlots.has(m.slot));
+    .filter((m) => m.slot);
 
-  const worn = [
-    ...milestoneOverlays.map((m) => ({
-      key: m.label,
-      title: m.label,
-      emoji: m.emoji,
-      slot: m.slot as Slot,
-    })),
-    ...shopItems.map((it) => ({
-      key: it.id,
-      title: it.name,
-      emoji: it.emoji,
-      slot: it.slot as Slot,
-    })),
-  ];
+  const takenSlots = new Set(milestoneOverlays.map((m) => m.slot as Slot));
+
+  const worn = milestoneOverlays.map((m) => ({
+    key: m.label,
+    title: m.label,
+    emoji: m.emoji,
+    slot: m.slot as Slot,
+  }));
 
   const glyphStyle = (slot: Slot, emoji: string) => {
     const a = anchors[slot] ?? anchors.head;
@@ -138,6 +130,21 @@ export function Companion({
       className={cn("relative", dims, className)}
       style={{ containerType: "inline-size" }}
     >
+      {/* Collected artwork, hung softly behind the companion */}
+      {backdropUrl && (
+        <div className="pointer-events-none absolute inset-0 -z-0 overflow-hidden rounded-[2rem]">
+          <img
+            src={backdropUrl}
+            alt=""
+            aria-hidden
+            className="h-full w-full scale-110 object-cover opacity-45 blur-[2px]"
+            draggable={false}
+          />
+          <div className="absolute inset-0 rounded-[2rem] bg-background/35" />
+          <div className="absolute inset-0 rounded-[2rem] ring-1 ring-border/60" />
+        </div>
+      )}
+
       {/* Night lamp glow behind companion */}
       {night && (
         <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2">

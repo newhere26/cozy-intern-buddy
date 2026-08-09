@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as RelaxationRouteImport } from './routes/relaxation'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as AttendanceReviewRouteImport } from './routes/attendance-review'
 import { Route as AffirmationsRouteImport } from './routes/affirmations'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -33,6 +35,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JourneyRoute = JourneyRouteImport.update({
   id: '/journey',
   path: '/journey',
@@ -46,6 +53,11 @@ const JournalRoute = JournalRouteImport.update({
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttendanceReviewRoute = AttendanceReviewRouteImport.update({
+  id: '/attendance-review',
+  path: '/attendance-review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AffirmationsRoute = AffirmationsRouteImport.update({
@@ -62,9 +74,11 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/affirmations': typeof AffirmationsRoute
+  '/attendance-review': typeof AttendanceReviewRoute
   '/calendar': typeof CalendarRoute
   '/journal': typeof JournalRoute
   '/journey': typeof JourneyRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/relaxation': typeof RelaxationRoute
   '/tools': typeof ToolsRoute
@@ -72,9 +86,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/affirmations': typeof AffirmationsRoute
+  '/attendance-review': typeof AttendanceReviewRoute
   '/calendar': typeof CalendarRoute
   '/journal': typeof JournalRoute
   '/journey': typeof JourneyRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/relaxation': typeof RelaxationRoute
   '/tools': typeof ToolsRoute
@@ -83,9 +99,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/affirmations': typeof AffirmationsRoute
+  '/attendance-review': typeof AttendanceReviewRoute
   '/calendar': typeof CalendarRoute
   '/journal': typeof JournalRoute
   '/journey': typeof JourneyRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/relaxation': typeof RelaxationRoute
   '/tools': typeof ToolsRoute
@@ -95,9 +113,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/affirmations'
+    | '/attendance-review'
     | '/calendar'
     | '/journal'
     | '/journey'
+    | '/notifications'
     | '/onboarding'
     | '/relaxation'
     | '/tools'
@@ -105,9 +125,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/affirmations'
+    | '/attendance-review'
     | '/calendar'
     | '/journal'
     | '/journey'
+    | '/notifications'
     | '/onboarding'
     | '/relaxation'
     | '/tools'
@@ -115,9 +137,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/affirmations'
+    | '/attendance-review'
     | '/calendar'
     | '/journal'
     | '/journey'
+    | '/notifications'
     | '/onboarding'
     | '/relaxation'
     | '/tools'
@@ -126,9 +150,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AffirmationsRoute: typeof AffirmationsRoute
+  AttendanceReviewRoute: typeof AttendanceReviewRoute
   CalendarRoute: typeof CalendarRoute
   JournalRoute: typeof JournalRoute
   JourneyRoute: typeof JourneyRoute
+  NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
   RelaxationRoute: typeof RelaxationRoute
   ToolsRoute: typeof ToolsRoute
@@ -157,6 +183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/journey': {
       id: '/journey'
       path: '/journey'
@@ -176,6 +209,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/attendance-review': {
+      id: '/attendance-review'
+      path: '/attendance-review'
+      fullPath: '/attendance-review'
+      preLoaderRoute: typeof AttendanceReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/affirmations': {
@@ -198,9 +238,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AffirmationsRoute: AffirmationsRoute,
+  AttendanceReviewRoute: AttendanceReviewRoute,
   CalendarRoute: CalendarRoute,
   JournalRoute: JournalRoute,
   JourneyRoute: JourneyRoute,
+  NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
   RelaxationRoute: RelaxationRoute,
   ToolsRoute: ToolsRoute,
@@ -208,13 +250,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
