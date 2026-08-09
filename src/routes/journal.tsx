@@ -28,6 +28,9 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/journal")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    prompt: typeof search.prompt === "string" ? search.prompt : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Writing — Serenity" },
@@ -38,7 +41,8 @@ export const Route = createFileRoute("/journal")({
 });
 
 function WritingPage() {
-  const [openJournal, setOpenJournal] = useState(false);
+  const { prompt: incomingPrompt } = Route.useSearch();
+  const [openJournal, setOpenJournal] = useState(!!incomingPrompt);
   const [openTodo, setOpenTodo] = useState(true);
 
   return (
@@ -52,7 +56,7 @@ function WritingPage() {
           open={openJournal}
           onToggle={() => setOpenJournal((v) => !v)}
         >
-          <JournalPanel />
+          <JournalPanel initialPrompt={incomingPrompt} />
         </CollapsibleTile>
 
         <CollapsibleTile
@@ -99,21 +103,27 @@ function CollapsibleTile({
   );
 }
 
-function JournalPanel() {
-  const app = useApp();
-  const [editing, setEditing] = useState(false);
+function JournalPanel({ initialPrompt }: { initialPrompt?: string }) {
+  const [editing, setEditing] = useState(!!initialPrompt);
 
-  if (editing) return <JournalEditor onClose={() => setEditing(false)} />;
+  if (editing)
+    return <JournalEditor onClose={() => setEditing(false)} initialPrompt={initialPrompt} />;
 
   return <JournalList onNew={() => setEditing(true)} />;
 }
 
-function JournalEditor({ onClose }: { onClose: () => void }) {
+function JournalEditor({
+  onClose,
+  initialPrompt,
+}: {
+  onClose: () => void;
+  initialPrompt?: string;
+}) {
   const app = useApp();
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [rating, setRating] = useState<number>(3);
-  const [prompt, setPrompt] = useState<string | undefined>();
+  const [prompt, setPrompt] = useState<string | undefined>(initialPrompt);
 
   const pickPrompt = () => {
     setPrompt(JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)]);
@@ -169,6 +179,7 @@ function JournalEditor({ onClose }: { onClose: () => void }) {
         onChange={(e) => setText(e.target.value)}
         placeholder="Write on the lines…"
         rows={12}
+        autoFocus={!!initialPrompt}
         className="w-full resize-none rounded-xl border border-border bg-background p-3 font-mono text-[13px] text-foreground journal-lines"
       />
       <div>

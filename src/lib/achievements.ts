@@ -72,13 +72,18 @@ export function buildAchievements(app: AppState): Achievement[] {
       });
     });
 
-  const top = [...byName.entries()].sort((a, b) => b[1].length - a[1].length)[0];
-  if (top)
+  const counts = [...byName.entries()].sort((a, b) => b[1].length - a[1].length);
+  const topCount = counts[0]?.[1].length ?? 0;
+  const tied = counts.filter(([, list]) => list.length === topCount);
+  if (topCount > 0)
     out.push({
       id: "most-performed",
       emoji: "🏅",
-      title: "Most performed procedure",
-      line: `${top[0]} — ${top[1].length} times.`,
+      title: tied.length > 1 ? "Most performed procedures" : "Most performed procedure",
+      line:
+        tied.length > 1
+          ? `${tied.map(([n]) => n).join(", ")} — ${topCount} times each.`
+          : `${tied[0][0]} — ${topCount} times.`,
       earned: true,
     });
 
@@ -235,5 +240,6 @@ export function buildAchievements(app: AppState): Achievement[] {
     }),
   );
 
-  return out;
+  // Only collected ones are shown; pending goals would just add noise.
+  return out.filter((a) => a.earned);
 }

@@ -8,7 +8,8 @@ import { WellnessTile } from "@/components/home/WellnessTile";
 import { ProcedureTile } from "@/components/home/ProcedureTile";
 import { fullyCompletedWeeks } from "@/lib/date";
 import { pickCompanionLine } from "@/lib/companion-lines";
-import { Sparkles, Wind } from "lucide-react";
+import { artImageUrl, galleryFromCache } from "@/lib/artic";
+import { ArrowDown, Sparkles, Wind } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -45,8 +46,14 @@ function Home() {
   const tapCompanion = () => {
     const line = pickCompanionLine(isNight ? "night" : "day");
     setBubble(line);
-    setTimeout(() => setBubble(null), 5000);
   };
+
+  // A question deserves an answer — offer to carry it into Writing.
+  const bubbleIsQuestion = !!bubble && bubble.trim().endsWith("?");
+
+  const backdrop = app.activeArt
+    ? galleryFromCache().find((a) => a.id === app.activeArt)
+    : undefined;
 
   const greeting = !mounted
     ? ""
@@ -78,17 +85,38 @@ function Home() {
             {[app.city, currentPosting?.name].filter(Boolean).join("  |  ") || "Somewhere in the wards"}
           </div>
         </div>
+        {/* Reserved slot so what the companion says is never clipped */}
+        <div className="mb-1 min-h-[68px] px-1">
+          {bubble && (
+            <div className="mx-auto max-w-[300px] animate-in fade-in slide-in-from-top-2">
+              <button
+                onClick={() => setBubble(null)}
+                className="relative w-full rounded-2xl bg-card px-3.5 py-2.5 text-left text-xs leading-relaxed text-foreground shadow-lg"
+              >
+                {bubble}
+                <span className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-card" />
+              </button>
+              {bubbleIsQuestion && (
+                <button
+                  onClick={() =>
+                    nav({ to: "/journal", search: { prompt: bubble } })
+                  }
+                  className="mx-auto mt-2 flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-[11px] text-primary"
+                  aria-label="Write about this in your diary"
+                >
+                  <ArrowDown className="h-3 w-3" />
+                  Write about this
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         <div
           className="flex flex-col items-center justify-end"
           style={{ height: `${heightSvh}svh` }}
         >
           <div className="relative h-full w-full max-w-[280px]">
-            {bubble && (
-              <div className="absolute left-1/2 top-0 z-30 max-w-[240px] -translate-x-1/2 rounded-2xl bg-card px-3 py-2 text-xs text-foreground shadow-lg animate-in fade-in slide-in-from-top-2">
-                {bubble}
-                <span className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-card" />
-              </div>
-            )}
             <button
               onClick={tapCompanion}
               className="h-full w-full"
@@ -98,7 +126,7 @@ function Home() {
                 id={app.companion}
                 overlays
                 night={isNight}
-                equippedItems={app.equippedItems}
+                backdropUrl={backdrop ? artImageUrl(backdrop.imageId, 843) : undefined}
                 completedWeeks={completed}
               />
             </button>

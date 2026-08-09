@@ -8,6 +8,19 @@ export type Supervision = "observed" | "assisted" | "independent";
 export interface DayEntry {
   status: DayStatus;
   night?: boolean;
+  /** true when filled in automatically by the two-week backfill */
+  auto?: boolean;
+}
+
+export type NudgeFrequency = "gentle" | "normal" | "often";
+
+export interface NotifPrefs {
+  hydration: boolean;
+  nourishment: boolean;
+  attendance: boolean;
+  hydrationFrequency: NudgeFrequency;
+  quietStart: string; // HH:MM
+  quietEnd: string; // HH:MM
 }
 
 export interface Rotation {
@@ -96,6 +109,9 @@ export interface AppState {
   claimedDays: number;
   ownedItems: string[];
   equippedItems: string[];
+  ownedArt: string[];
+  activeArt?: string;
+  notifPrefs: NotifPrefs;
   rotationReviews: Record<string, RotationReview>;
 }
 
@@ -133,9 +149,24 @@ const defaultState: AppState = {
   claimedDays: 0,
   ownedItems: [],
   equippedItems: [],
+  ownedArt: [],
+  notifPrefs: {
+    hydration: true,
+    nourishment: true,
+    attendance: true,
+    hydrationFrequency: "normal",
+    quietStart: "22:30",
+    quietEnd: "07:00",
+  },
   rotationReviews: {},
 };
 
+
+/** Costs of the retired emoji-accessory store, used to refund old purchases. */
+const LEGACY_ITEM_COSTS: Record<string, number> = {
+  coffee: 20, plant: 25, sunglasses: 40, chain: 60, scarf: 35, cap: 30,
+  book: 45, bandana: 25, donut: 20, cake: 80, medal: 100, crown: 200,
+};
 
 let state: AppState = load();
 const listeners = new Set<() => void>();
@@ -146,9 +177,21 @@ function load(): AppState {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultState;
     const parsed = { ...defaultState, ...JSON.parse(raw) } as AppState;
+    parsed.notifPrefs = { ...defaultState.notifPrefs, ...(parsed.notifPrefs ?? {}) };
+    parsed.ownedArt = parsed.ownedArt ?? [];
     // Retired companions fall back to the capybara.
     if (!["capybara", "cow", "owl"].includes(parsed.companion)) {
       parsed.companion = "capybara";
+    }
+    // Accessory store retired: refund anything previously bought.
+    if (parsed.ownedItems?.length) {
+      const refund = parsed.ownedItems.reduce(
+        (sum, id) => sum + (LEGACY_ITEM_COSTS[id] ?? 25),
+        0,
+      );
+      parsed.credits += refund;
+      parsed.ownedItems = [];
+      parsed.equippedItems = [];
     }
     return parsed;
   } catch {
@@ -204,6 +247,7 @@ export function setDay(date: string, entry: Partial<DayEntry>) {
   setState((s) => {
     const prev = s.days[date];
     const next: DayEntry = {
+      // a manual edit clears the auto-marked flag
       status: entry.status ?? prev?.status ?? "present",
       night: entry.night ?? prev?.night,
     };
@@ -297,22 +341,23 @@ export function claimCredits(earned: number) {
     return { credits: s.credits + delta, claimedDays: earned };
   });
 }
-export function purchaseItem(id: string, cost: number) {
+export function purchaseArt(id: string, cost: number) {
   setState((s) => {
-    if (s.credits < cost || s.ownedItems.includes(id)) return {};
+    if (s.credits < cost || s.ownedArt.includes(id)) return {};
     return {
       credits: s.credits - cost,
-      ownedItems: [...s.ownedItems, id],
-      equippedItems: [...s.equippedItems, id],
+      ownedArt: [...s.ownedArt, id],
+      activeArt: id,
     };
   });
 }
-export function toggleEquip(id: string) {
-  setState((s) => ({
-    equippedItems: s.equippedItems.includes(id)
-      ? s.equippedItems.filter((x) => x !== id)
-      : [...s.equippedItems, id],
-  }));
+
+export function setActiveArt(id: string | undefined) {
+  setState((s) => (id && !s.ownedArt.includes(id) ? {} : { activeArt: id }));
+}
+
+export function setNotifPrefs(patch: Partial<NotifPrefs>) {
+  setState((s) => ({ notifPrefs: { ...s.notifPrefs, ...patch } }));
 }
 
 export function resetAll() {
@@ -348,8 +393,26 @@ export function backfillPresentDays() {
   const patch: Record<string, DayEntry> = {};
   for (const d = new Date(start); d <= cutoff; d.setDate(d.getDate() + 1)) {
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    if (!s.days[key]) patch[key] = { status: "present" };
+    if (!s.days[key]) patch[key] = { status: "present", auto: true };
   }
   if (Object.keys(patch).length === 0) return;
   setState((cur) => ({ days: { ...patch, ...cur.days } }));
+}
+
+/** Remove a day entry entirely (used by the attendance review). */
+export function clearDay(date: string) {
+  setState((s) => {
+    if (!s.days[date]) return {};
+    const days = { ...s.days };
+    delete days[date];
+    return { days };
+  });
+}
+
+/** Dates that the two-week backfill filled in on the user's behalf. */
+export function autoMarkedDays(s: AppState): string[] {
+  return Object.entries(s.days)
+    .filter(([, e]) => e.auto)
+    .map(([d]) => d)
+    .sort();
 }

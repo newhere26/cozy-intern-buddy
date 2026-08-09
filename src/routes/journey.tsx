@@ -1,13 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { claimCredits, purchaseItem, toggleEquip, useApp } from "@/lib/store";
+import { claimCredits, purchaseArt, setActiveArt, useApp } from "@/lib/store";
 import { fmtDate, fullyCompletedWeeks, daysSince } from "@/lib/date";
 import { postingColor, rotationForDate } from "@/lib/postings";
-import { STORE } from "@/lib/store-items";
+import { artImageUrl, galleryFromCache, loadGallery, type ArtPiece } from "@/lib/artic";
 import { PostingReview } from "@/components/PostingReview";
 import { buildAchievements } from "@/lib/achievements";
-import { ChevronDown, Coins } from "lucide-react";
+import { Bell, CalendarCheck, ChevronDown, ChevronRight, Coins } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 
@@ -85,13 +85,35 @@ function JourneyPage() {
 
 
         <Collapsible
-          title="Store · Credits"
+          title="Art Gallery · Credits"
           open={open === "store"}
           onToggle={() => setOpen(open === "store" ? null : "store")}
           right={<span className="flex items-center gap-1 text-xs text-accent"><Coins className="h-3.5 w-3.5" /> {app.credits}</span>}
         >
-          <StorePanel />
+          <GalleryPanel />
         </Collapsible>
+
+        <Link
+          to="/attendance-review"
+          className="flex items-center justify-between rounded-3xl bg-card p-4"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+            Attendance review
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
+
+        <Link
+          to="/notifications"
+          className="flex items-center justify-between rounded-3xl bg-card p-4"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Bell className="h-4 w-4 text-muted-foreground" />
+            Reminder settings
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
       </div>
     </AppShell>
   );
@@ -327,14 +349,12 @@ function PostingsPanel({ expanded }: { expanded: boolean }) {
 
 function AchievementsPanel() {
   const app = useApp();
-  const items = buildAchievements(app);
-  const earned = items.filter((a) => a.earned);
-  const locked = items.filter((a) => !a.earned);
+  const earned = buildAchievements(app);
 
   return (
     <div className="space-y-3">
       <div className="text-[11px] text-muted-foreground">
-        {earned.length} of {items.length} collected — no rush.
+        {earned.length} collected — no rush.
       </div>
       <div className="space-y-1.5">
         {earned.map((a) => (
@@ -360,28 +380,34 @@ function AchievementsPanel() {
           </p>
         )}
       </div>
-      {locked.length > 0 && (
-        <Group title={`Still ahead (${locked.length})`}>
-          {locked.map((a) => (
-            <div key={a.id} className="flex items-start gap-2.5 py-0.5 opacity-50">
-              <span className="text-base leading-none grayscale">{a.emoji}</span>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs text-foreground">{a.title}</div>
-                <div className="text-[10px] text-muted-foreground">{a.line}</div>
-              </div>
-            </div>
-          ))}
-        </Group>
-      )}
     </div>
   );
 }
 
-
-function StorePanel() {
+function GalleryPanel() {
   const app = useApp();
-  const earned = daysSince(app.startDate);
-  const canClaim = Math.max(0, earned - app.claimedDays);
+  const earnedCredits = daysSince(app.startDate);
+  const canClaim = Math.max(0, earnedCredits - app.claimedDays);
+
+  const [pieces, setPieces] = useState<ArtPiece[]>(() => galleryFromCache());
+  const [status, setStatus] = useState<"idle" | "loading" | "error">(
+    galleryFromCache().length ? "idle" : "loading",
+  );
+
+  useEffect(() => {
+    if (pieces.length) return;
+    const ac = new AbortController();
+    setStatus("loading");
+    loadGallery(ac.signal)
+      .then((g) => {
+        setPieces(g);
+        setStatus("idle");
+      })
+      .catch(() => setStatus("error"));
+    return () => ac.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between rounded-2xl bg-secondary/30 p-3 text-xs">
@@ -395,7 +421,7 @@ function StorePanel() {
         </div>
         <button
           disabled={canClaim <= 0}
-          onClick={() => claimCredits(earned)}
+          onClick={() => claimCredits(earnedCredits)}
           className={cn(
             "rounded-full px-3 py-1.5 text-[11px] font-medium",
             canClaim > 0
@@ -406,47 +432,85 @@ function StorePanel() {
           Claim
         </button>
       </div>
+
+      <p className="text-[11px] text-muted-foreground">
+        Paintings from the Art Institute of Chicago. Collect one and it hangs
+        behind your companion.
+      </p>
+
+      {app.activeArt && (
+        <button
+          onClick={() => setActiveArt(undefined)}
+          className="w-full rounded-full border border-border py-1.5 text-[11px] text-muted-foreground"
+        >
+          Take the painting down
+        </button>
+      )}
+
+      {status === "loading" && (
+        <p className="py-6 text-center text-[11px] text-muted-foreground">
+          Walking to the gallery…
+        </p>
+      )}
+      {status === "error" && (
+        <p className="py-6 text-center text-[11px] text-muted-foreground">
+          Couldn't reach the gallery today. It'll be here next time.
+        </p>
+      )}
+
       <div className="grid grid-cols-2 gap-2">
-        {STORE.map((it) => {
-          const owned = app.ownedItems.includes(it.id);
-          const equipped = app.equippedItems.includes(it.id);
+        {pieces.map((art) => {
+          const owned = app.ownedArt.includes(art.id);
+          const active = app.activeArt === art.id;
           return (
             <div
-              key={it.id}
-              className="flex flex-col items-start rounded-2xl border border-border bg-background/50 p-3"
+              key={art.id}
+              className="flex flex-col overflow-hidden rounded-2xl border border-border bg-background/50"
             >
-              <div className="flex w-full items-start justify-between">
-                <div className="text-3xl">{it.emoji}</div>
-                <div className="text-[10px] text-accent">{it.cost}c</div>
+              <img
+                src={artImageUrl(art.imageId, 400)}
+                alt={art.title}
+                loading="lazy"
+                className={cn(
+                  "aspect-[4/3] w-full object-cover",
+                  !owned && "opacity-60 saturate-50",
+                )}
+              />
+              <div className="flex flex-1 flex-col p-2.5">
+                <div className="line-clamp-2 text-[11px] font-medium text-foreground">
+                  {art.title}
+                </div>
+                <div className="line-clamp-1 text-[10px] text-muted-foreground">
+                  {art.artist}
+                  {art.date ? ` · ${art.date}` : ""}
+                </div>
+                {owned ? (
+                  <button
+                    onClick={() => setActiveArt(active ? undefined : art.id)}
+                    className={cn(
+                      "mt-2 w-full rounded-full py-1 text-[10px]",
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-border text-muted-foreground",
+                    )}
+                  >
+                    {active ? "Hanging" : "Hang it up"}
+                  </button>
+                ) : (
+                  <button
+                    disabled={app.credits < art.cost}
+                    onClick={() => purchaseArt(art.id, art.cost)}
+                    className={cn(
+                      "mt-2 w-full rounded-full py-1 text-[10px]",
+                      app.credits >= art.cost
+                        ? "bg-accent text-accent-foreground"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {app.credits >= art.cost ? `Collect · ${art.cost}c` : `${art.cost}c`}
+                  </button>
+                )}
               </div>
-              <div className="mt-1 text-xs font-medium text-foreground">{it.name}</div>
-              <div className="text-[10px] text-muted-foreground">{it.desc}</div>
-              {owned ? (
-                <button
-                  onClick={() => toggleEquip(it.id)}
-                  className={cn(
-                    "mt-2 w-full rounded-full py-1 text-[10px]",
-                    equipped
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-border text-muted-foreground",
-                  )}
-                >
-                  {equipped ? "Equipped" : "Equip"}
-                </button>
-              ) : (
-                <button
-                  disabled={app.credits < it.cost}
-                  onClick={() => purchaseItem(it.id, it.cost)}
-                  className={cn(
-                    "mt-2 w-full rounded-full py-1 text-[10px]",
-                    app.credits >= it.cost
-                      ? "bg-accent text-accent-foreground"
-                      : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {app.credits >= it.cost ? "Buy" : "Locked"}
-                </button>
-              )}
             </div>
           );
         })}
