@@ -149,8 +149,8 @@ const defaultState: AppState = {
   claimedDays: 0,
   ownedItems: [],
   equippedItems: [],
-  ownedArt: ["14572"],
-  activeArt: "14572",
+  ownedArt: ["water-lilies"],
+  activeArt: "water-lilies",
   notifPrefs: {
     hydration: true,
     nourishment: true,
@@ -179,9 +179,15 @@ function load(): AppState {
     if (!raw) return defaultState;
     const parsed = { ...defaultState, ...JSON.parse(raw) } as AppState;
     parsed.notifPrefs = { ...defaultState.notifPrefs, ...(parsed.notifPrefs ?? {}) };
-    parsed.ownedArt = parsed.ownedArt && parsed.ownedArt.length ? parsed.ownedArt : ["14572"];
-    if (parsed.activeArt === undefined && parsed.ownedArt.includes("14572")) {
-      parsed.activeArt = "14572";
+    if (parsed.ownedArt?.includes("14572")) {
+      parsed.ownedArt = parsed.ownedArt.map((id) => (id === "14572" ? "water-lilies" : id));
+    }
+    if (parsed.activeArt === "14572") {
+      parsed.activeArt = "water-lilies";
+    }
+    parsed.ownedArt = parsed.ownedArt && parsed.ownedArt.length ? parsed.ownedArt : ["water-lilies"];
+    if (parsed.activeArt === undefined) {
+      parsed.activeArt = "water-lilies";
     }
     // Retired companions fall back to the capybara.
     if (!["capybara", "cow", "owl"].includes(parsed.companion)) {

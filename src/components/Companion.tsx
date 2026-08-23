@@ -143,8 +143,9 @@ export function Companion({
             <div className="relative h-full w-full overflow-hidden rounded-xl bg-muted/30">
               <img
                 src={backdropUrl}
-                alt="Hanging artwork"
-                className="h-full w-full object-cover opacity-90 transition-opacity duration-300"
+                alt=""
+                loading="eager"
+                className="h-full w-full object-cover opacity-95 transition-opacity duration-300"
                 draggable={false}
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/5 via-transparent to-white/10" />
