@@ -130,18 +130,26 @@ export function Companion({
       className={cn("relative", dims, className)}
       style={{ containerType: "inline-size" }}
     >
-      {/* Collected artwork, hung softly behind the companion */}
+      {/* Collected artwork, hung on the wall behind the companion */}
       {backdropUrl && (
-        <div className="pointer-events-none absolute inset-0 -z-0 overflow-hidden rounded-[2rem]">
-          <img
-            src={backdropUrl}
-            alt=""
-            aria-hidden
-            className="h-full w-full scale-110 object-cover opacity-45 blur-[2px]"
-            draggable={false}
-          />
-          <div className="absolute inset-0 rounded-[2rem] bg-background/35" />
-          <div className="absolute inset-0 rounded-[2rem] ring-1 ring-border/60" />
+        <div className="pointer-events-none absolute inset-x-3 top-1 bottom-4 z-0 flex flex-col items-center">
+          {/* Wall Hanging Hook & Wire */}
+          <div className="z-10 -mb-1 flex flex-col items-center">
+            <div className="h-2 w-2 rounded-full bg-amber-700/80 shadow-xs ring-1 ring-amber-900/30" />
+            <div className="h-2 w-0.5 bg-amber-900/40" />
+          </div>
+          {/* Cozy Framed Painting */}
+          <div className="relative h-full w-full overflow-hidden rounded-2xl border-[3px] border-amber-900/25 bg-card/90 p-1 shadow-md ring-1 ring-border/50 dark:border-amber-700/40">
+            <div className="relative h-full w-full overflow-hidden rounded-xl bg-muted/30">
+              <img
+                src={backdropUrl}
+                alt="Hanging artwork"
+                className="h-full w-full object-cover opacity-90 transition-opacity duration-300"
+                draggable={false}
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/5 via-transparent to-white/10" />
+            </div>
+          </div>
         </div>
       )}
 

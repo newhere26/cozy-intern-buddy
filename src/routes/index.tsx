@@ -8,7 +8,7 @@ import { WellnessTile } from "@/components/home/WellnessTile";
 import { ProcedureTile } from "@/components/home/ProcedureTile";
 import { fullyCompletedWeeks } from "@/lib/date";
 import { pickCompanionLine } from "@/lib/companion-lines";
-import { artImageUrl, galleryFromCache } from "@/lib/artic";
+import { artImageUrl, getArtPiece } from "@/lib/artic";
 import { ArrowDown, Sparkles, Wind } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -51,9 +51,7 @@ function Home() {
   // A question deserves an answer — offer to carry it into Writing.
   const bubbleIsQuestion = !!bubble && bubble.trim().endsWith("?");
 
-  const backdrop = app.activeArt
-    ? galleryFromCache().find((a) => a.id === app.activeArt)
-    : undefined;
+  const backdrop = getArtPiece(app.activeArt);
 
   const greeting = !mounted
     ? ""
