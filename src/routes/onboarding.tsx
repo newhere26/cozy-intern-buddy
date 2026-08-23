@@ -6,7 +6,7 @@ import { COMPANIONS, COUNTRIES, THEMES } from "@/lib/data";
 import { Companion } from "@/components/Companion";
 import { cn } from "@/lib/utils";
 import { isLettersOnly, sanitizeInt, sanitizeLetters } from "@/lib/validate";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Footprints } from "lucide-react";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -27,6 +27,7 @@ const STEPS = [
   "leaves",
   "shift",
   "companion",
+  "steps",
   "theme",
   "done",
 ] as const;
@@ -223,6 +224,42 @@ function OnboardingPage() {
                   <div className="text-[10px] text-muted-foreground">{c.blurb}</div>
                 </button>
               ))}
+            </div>
+          </Field>
+        )}
+
+        {step === "steps" && (
+          <Field
+            label="Ward Walking & Steps"
+            hint="Hospital duties involve endless walking between wards, casualty, and OT. We track this for your year-end roundup."
+          >
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-primary/20 bg-secondary/50 p-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <Footprints className="h-5 w-5 text-primary" />
+                  <span>Daily Walking Goal</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Choose a gentle target for your hospital rounds:
+                </p>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {[4000, 6000, 10000].map((goal) => (
+                    <button
+                      key={goal}
+                      type="button"
+                      onClick={() => setState({ stepGoal: goal })}
+                      className={cn(
+                        "rounded-xl border py-2 text-xs font-semibold transition-all",
+                        (app.stepGoal || 6000) === goal
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background text-muted-foreground",
+                      )}
+                    >
+                      {goal.toLocaleString()} steps
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </Field>
         )}

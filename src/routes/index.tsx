@@ -48,8 +48,15 @@ function Home() {
     setBubble(line);
   };
 
-  // A question deserves an answer — offer to carry it into Writing.
-  const bubbleIsQuestion = !!bubble && bubble.trim().endsWith("?");
+  // A question or reflective prompt deserves an answer — offer to carry it into Writing.
+  const bubbleIsQuestion =
+    !!bubble &&
+    (bubble.includes("?") ||
+      bubble.startsWith("Tell me") ||
+      bubble.startsWith("What") ||
+      bubble.startsWith("How") ||
+      bubble.startsWith("Is there") ||
+      bubble.startsWith("Did you"));
 
   const backdrop = getArtPiece(app.activeArt);
 
@@ -83,27 +90,29 @@ function Home() {
             {[app.city, currentPosting?.name].filter(Boolean).join("  |  ") || "Somewhere in the wards"}
           </div>
         </div>
-        {/* Reserved slot so what the companion says is never clipped */}
-        <div className="mb-1 min-h-[68px] px-1">
+        {/* Reserved slot so what the companion says is clearly visible and readable */}
+        <div className="mb-2 min-h-[76px] px-1">
           {bubble && (
-            <div className="mx-auto max-w-[300px] animate-in fade-in slide-in-from-top-2">
+            <div className="mx-auto max-w-[340px] animate-in fade-in slide-in-from-top-2">
               <button
+                type="button"
                 onClick={() => setBubble(null)}
-                className="relative w-full rounded-2xl bg-card px-3.5 py-2.5 text-left text-xs leading-relaxed text-foreground shadow-lg"
+                className="relative w-full rounded-2xl border border-border/60 bg-card px-4 py-3 text-left text-[13px] font-medium leading-relaxed text-foreground shadow-md transition-transform active:scale-98"
               >
                 {bubble}
-                <span className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-card" />
+                <span className="absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-b border-r border-border/60 bg-card" />
               </button>
               {bubbleIsQuestion && (
                 <button
+                  type="button"
                   onClick={() =>
                     nav({ to: "/journal", search: { prompt: bubble } })
                   }
-                  className="mx-auto mt-2 flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-[11px] text-primary"
+                  className="mx-auto mt-2.5 flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-xs transition-all hover:bg-primary/20 active:scale-95"
                   aria-label="Write about this in your diary"
                 >
-                  <ArrowDown className="h-3 w-3" />
-                  Write about this
+                  <ArrowDown className="h-3.5 w-3.5 shrink-0" />
+                  <span>Write about this in your diary →</span>
                 </button>
               )}
             </div>

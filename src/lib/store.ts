@@ -77,6 +77,13 @@ export interface RotationReview {
 }
 
 
+export interface WorkHours {
+  checkIn?: string; // HH:MM
+  checkOut?: string; // HH:MM
+  totalHours?: number;
+  note?: string;
+}
+
 export interface AppState {
   onboarded: boolean;
   name: string;
@@ -101,6 +108,9 @@ export interface AppState {
   procedures: ProcedureLog[];
   meals: Record<string, Meal[]>;
   water: Record<string, number>;
+  steps: Record<string, number>;
+  workHours: Record<string, WorkHours>;
+  stepGoal: number;
   journal: JournalEntry[];
   ratings: Record<string, number>;
   todos: Todo[];
@@ -142,6 +152,9 @@ const defaultState: AppState = {
   procedures: [],
   meals: {},
   water: {},
+  steps: {},
+  workHours: {},
+  stepGoal: 6000,
   journal: [],
   ratings: {},
   todos: [],
@@ -417,6 +430,61 @@ export function clearDay(date: string) {
     delete days[date];
     return { days };
   });
+}
+
+export function setSteps(date: string, count: number) {
+  setState((s) => ({
+    steps: { ...s.steps, [date]: Math.max(0, Math.round(count)) },
+  }));
+}
+
+export function bumpSteps(date: string, delta: number) {
+  setState((s) => {
+    const cur = s.steps[date] ?? 0;
+    return { steps: { ...s.steps, [date]: Math.max(0, cur + delta) } };
+  });
+}
+
+export function setStepGoal(goal: number) {
+  setState(() => ({ stepGoal: Math.max(1000, goal) }));
+}
+
+export function setWorkHours(
+  date: string,
+  hours: { checkIn?: string; checkOut?: string; totalHours?: number; note?: string },
+) {
+  setState((s) => ({
+    workHours: {
+      ...s.workHours,
+      [date]: { ...s.workHours[date], ...hours },
+    },
+  }));
+}
+
+/**
+ * Calculates work hours for a given day, checking actual log first then falling back to scheduled shift.
+ */
+export function calculateHoursForDay(app: AppState, dateKey: string): number {
+  const actual = app.workHours[dateKey];
+  if (actual?.totalHours !== undefined) return actual.totalHours;
+
+  const day = app.days[dateKey];
+  if (!day || day.status !== "present") return 0;
+
+  const isNight = !!day.night;
+  const rot = app.rotations.find((r) => dateKey >= r.start && dateKey <= r.end);
+
+  const checkIn = actual?.checkIn || (isNight ? app.nightStart : rot?.checkIn || app.checkIn);
+  const checkOut = actual?.checkOut || (isNight ? app.nightEnd : rot?.checkOut || app.checkOut);
+
+  const [h1, m1] = (checkIn || "08:00").split(":").map(Number);
+  const [h2, m2] = (checkOut || "16:00").split(":").map(Number);
+
+  let startMin = h1 * 60 + m1;
+  let endMin = h2 * 60 + m2;
+  if (endMin <= startMin) endMin += 1440; // overnight
+
+  return Math.round(((endMin - startMin) / 60) * 10) / 10;
 }
 
 /** Dates that the two-week backfill filled in on the user's behalf. */

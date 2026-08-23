@@ -7,7 +7,22 @@ import { postingColor, rotationForDate } from "@/lib/postings";
 import { artImageUrl, galleryFromCache, loadGallery, type ArtPiece } from "@/lib/artic";
 import { PostingReview } from "@/components/PostingReview";
 import { buildAchievements } from "@/lib/achievements";
-import { Bell, CalendarCheck, ChevronDown, ChevronRight, Coins } from "lucide-react";
+import { generateAnnualReport } from "@/lib/reports";
+import {
+  Award,
+  Bell,
+  CalendarCheck,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Coins,
+  Footprints,
+  Heart,
+  MoonStar,
+  Sparkles,
+  Stethoscope,
+  TrendingUp,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 
@@ -26,7 +41,9 @@ function JourneyPage() {
   const done = fullyCompletedWeeks(app.startDate);
   const pct = Math.min(100, (done / app.durationWeeks) * 100);
 
-  const [open, setOpen] = useState<"leaves" | "proc" | "post" | "ach" | "store" | null>("leaves");
+  const [open, setOpen] = useState<
+    "leaves" | "proc" | "post" | "ach" | "store" | "roundup" | null
+  >("leaves");
 
   return (
     <AppShell>
@@ -75,14 +92,25 @@ function JourneyPage() {
         </Collapsible>
 
         <Collapsible
+          title="Roundup & Year in Review"
+          open={open === "roundup"}
+          onToggle={() => setOpen(open === "roundup" ? null : "roundup")}
+          right={
+            <span className="flex items-center gap-1 text-xs font-semibold text-primary">
+              <Sparkles className="h-3.5 w-3.5 text-accent" /> Roundup
+            </span>
+          }
+        >
+          <AnnualRoundupPanel />
+        </Collapsible>
+
+        <Collapsible
           title="Achievements"
           open={open === "ach"}
           onToggle={() => setOpen(open === "ach" ? null : "ach")}
         >
           <AchievementsPanel />
         </Collapsible>
-
-
 
         <Collapsible
           title="Art Gallery · Credits"
@@ -515,6 +543,182 @@ function GalleryPanel() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function AnnualRoundupPanel() {
+  const app = useApp();
+  const report = useMemo(() => generateAnnualReport(app), [app]);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+
+  const activeMonthData = useMemo(() => {
+    if (!selectedMonth) return null;
+    return report.monthlyBreakdown.find((m) => m.monthKey === selectedMonth);
+  }, [report, selectedMonth]);
+
+  return (
+    <div className="space-y-4">
+      {/* Overview Banner */}
+      <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="font-display text-lg text-foreground">
+              Dr. {report.internName}'s Roundup
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              {[report.college, report.city].filter(Boolean).join(" · ") || "Internship Haven"}
+            </div>
+          </div>
+          <Sparkles className="h-6 w-6 text-primary" />
+        </div>
+      </div>
+
+      {/* Hero Stats Grid */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="rounded-2xl bg-secondary/50 p-3">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock className="h-3.5 w-3.5 text-primary" /> Total Hours on Duty
+          </div>
+          <div className="mt-1 font-display text-2xl text-foreground">
+            {report.totalWorkHours.toLocaleString()}
+            <span className="text-xs font-normal text-muted-foreground"> hrs</span>
+          </div>
+          <div className="mt-0.5 text-[10px] text-muted-foreground">
+            Avg {report.avgShiftHours}h/shift · Longest {report.longestShiftHours}h
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-secondary/50 p-3">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Footprints className="h-3.5 w-3.5 text-primary" /> Ward Footsteps
+          </div>
+          <div className="mt-1 font-display text-2xl text-foreground">
+            {report.totalStepsWalked >= 1000
+              ? `${(report.totalStepsWalked / 1000).toFixed(1)}k`
+              : report.totalStepsWalked}
+            <span className="text-xs font-normal text-muted-foreground"> steps</span>
+          </div>
+          <div className="mt-0.5 text-[10px] text-muted-foreground">
+            ~{report.estimatedKmWalked} km walked through wards
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-secondary/50 p-3">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CalendarCheck className="h-3.5 w-3.5 text-primary" /> Shifts Completed
+          </div>
+          <div className="mt-1 font-display text-2xl text-foreground">
+            {report.totalDaysPresent}
+            <span className="text-xs font-normal text-muted-foreground"> days</span>
+          </div>
+          <div className="mt-0.5 text-[10px] text-muted-foreground">
+            Including {report.totalNightShifts} night duties
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-secondary/50 p-3">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Stethoscope className="h-3.5 w-3.5 text-primary" /> Procedures
+          </div>
+          <div className="mt-1 font-display text-2xl text-foreground">
+            {report.totalProcedures}
+            <span className="text-xs font-normal text-muted-foreground"> logged</span>
+          </div>
+          <div className="mt-0.5 text-[10px] text-muted-foreground">
+            {report.independentProcedures} performed independently
+          </div>
+        </div>
+      </div>
+
+      {/* Posting Ratings Highlights */}
+      {(report.topPostingFelt || report.topPostingLearned || report.topPostingPG) && (
+        <div className="rounded-2xl border border-border bg-background/60 p-3.5">
+          <div className="mb-2 text-xs font-semibold text-foreground">
+            Rotation Reviews & Favorites
+          </div>
+          <div className="space-y-2">
+            {report.topPostingFelt && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <span>😊</span> Happiest Posting:
+                </span>
+                <span className="font-medium text-foreground">
+                  {report.topPostingFelt.name} ({report.topPostingFelt.score}/5)
+                </span>
+              </div>
+            )}
+            {report.topPostingLearned && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <span>📚</span> Most Educational:
+                </span>
+                <span className="font-medium text-foreground">
+                  {report.topPostingLearned.name} ({report.topPostingLearned.score}/5)
+                </span>
+              </div>
+            )}
+            {report.topPostingPG && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <span>🎯</span> Top PG Choice:
+                </span>
+                <span className="font-medium text-foreground">
+                  {report.topPostingPG.name} ({report.topPostingPG.score}/5)
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Monthly Breakdown */}
+      {report.monthlyBreakdown.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs font-semibold text-foreground">Monthly Milestones</div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {report.monthlyBreakdown.map((m) => (
+              <button
+                key={m.monthKey}
+                type="button"
+                onClick={() =>
+                  setSelectedMonth(selectedMonth === m.monthKey ? null : m.monthKey)
+                }
+                className={cn(
+                  "flex flex-col items-start rounded-2xl border p-2.5 text-left transition-all",
+                  selectedMonth === m.monthKey
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-background/50",
+                )}
+              >
+                <div className="font-display text-xs text-foreground">{m.label}</div>
+                <div className="mt-1 text-[10px] text-muted-foreground">
+                  {m.totalHours} hrs · {m.daysPresent} shifts
+                </div>
+                <div className="text-[10px] text-muted-foreground">
+                  {m.totalSteps.toLocaleString()} steps
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {activeMonthData && (
+            <div className="animate-in fade-in rounded-2xl border border-primary/20 bg-secondary/40 p-3 text-xs">
+              <div className="font-semibold text-foreground">
+                {activeMonthData.label} Detail Summary
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                <div>• Duty Hours: {activeMonthData.totalHours} hrs</div>
+                <div>• Night Duties: {activeMonthData.nightShifts}</div>
+                <div>• Ward Steps: {activeMonthData.totalSteps.toLocaleString()}</div>
+                <div>• Procedures: {activeMonthData.proceduresLogged}</div>
+                <div>• Diary Notes: {activeMonthData.journalEntries}</div>
+                <div>• Meals Logged: {activeMonthData.mealsLogged}</div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

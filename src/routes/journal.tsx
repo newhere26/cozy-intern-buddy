@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Companion } from "@/components/Companion";
 import {
@@ -42,8 +42,8 @@ export const Route = createFileRoute("/journal")({
 
 function WritingPage() {
   const { prompt: incomingPrompt } = Route.useSearch();
-  const [openJournal, setOpenJournal] = useState(!!incomingPrompt);
-  const [openTodo, setOpenTodo] = useState(true);
+  const [openJournal, setOpenJournal] = useState(true);
+  const [openTodo, setOpenTodo] = useState(!incomingPrompt);
 
   return (
     <AppShell>
@@ -87,7 +87,7 @@ function CollapsibleTile({
 }) {
   return (
     <section className="rounded-3xl border border-border bg-card p-4">
-      <button onClick={onToggle} className="flex w-full items-center justify-between">
+      <button type="button" onClick={onToggle} className="flex w-full items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">
             {icon}
@@ -105,9 +105,21 @@ function CollapsibleTile({
 
 function JournalPanel({ initialPrompt }: { initialPrompt?: string }) {
   const [editing, setEditing] = useState(!!initialPrompt);
+  const nav = useNavigate();
+
+  useEffect(() => {
+    if (initialPrompt) {
+      setEditing(true);
+    }
+  }, [initialPrompt]);
+
+  const handleClose = () => {
+    setEditing(false);
+    nav({ to: "/journal", search: {}, replace: true });
+  };
 
   if (editing)
-    return <JournalEditor onClose={() => setEditing(false)} initialPrompt={initialPrompt} />;
+    return <JournalEditor onClose={handleClose} initialPrompt={initialPrompt} />;
 
   return <JournalList onNew={() => setEditing(true)} />;
 }

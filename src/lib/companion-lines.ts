@@ -32,6 +32,14 @@ export const DAY_LINES = [
   "Did anyone thank you today? If not, I do.",
   "How's your back? Straighten up for a second.",
   "You can leave one message unread. It's okay.",
+  "What was the kindest thing someone said to you today?",
+  "Did you get even five minutes of fresh air?",
+  "How is your heart after that emergency?",
+  "What's one thing you want to leave behind when you leave the hospital today?",
+  "You are learning a whole language of healing. Be patient with yourself.",
+  "Remember to unclench your jaw and drop your shoulders.",
+  "Did you manage to sit down during rounds?",
+  "Who was the sweetest patient on your list today?",
 ];
 
 export const NIGHT_LINES = [
@@ -55,6 +63,13 @@ export const NIGHT_LINES = [
   "Even quiet nights count. Even the boring ones.",
   "You saw something today no one else did. That matters.",
   "Dawn is closer than you think.",
+  "Is there a patient keeping your thoughts busy tonight?",
+  "How are you really feeling at this quiet hour?",
+  "What's the hardest thing you handled so far on this duty?",
+  "Did you drink any water since the shift started?",
+  "What are you looking forward to doing once you reach home tomorrow?",
+  "Is the casualty quiet right now, or is it non-stop?",
+  "What's something you did tonight that you're quietly proud of?",
 ];
 
 export const MEAL_LINES = [

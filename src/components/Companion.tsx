@@ -130,25 +130,25 @@ export function Companion({
       className={cn("relative", dims, className)}
       style={{ containerType: "inline-size" }}
     >
-      {/* Collected artwork, hung on the wall behind the companion */}
+      {/* Collected artwork, elegantly framed and hung on the wall */}
       {backdropUrl && (
-        <div className="pointer-events-none absolute inset-x-3 top-1 bottom-4 z-0 flex flex-col items-center">
+        <div className="pointer-events-none absolute inset-x-6 top-0 h-[65%] z-0 flex flex-col items-center">
           {/* Wall Hanging Hook & Wire */}
           <div className="z-10 -mb-1 flex flex-col items-center">
-            <div className="h-2 w-2 rounded-full bg-amber-700/80 shadow-xs ring-1 ring-amber-900/30" />
-            <div className="h-2 w-0.5 bg-amber-900/40" />
+            <div className="h-2 w-2 rounded-full bg-amber-600/90 shadow-xs ring-1 ring-amber-950/40" />
+            <div className="h-3 w-0.5 bg-amber-800/50" />
           </div>
-          {/* Cozy Framed Painting */}
-          <div className="relative h-full w-full overflow-hidden rounded-2xl border-[3px] border-amber-900/25 bg-card/90 p-1 shadow-md ring-1 ring-border/50 dark:border-amber-700/40">
-            <div className="relative h-full w-full overflow-hidden rounded-xl bg-muted/30">
+          {/* Framed Canvas with Passe-partout Matting */}
+          <div className="relative h-full w-full overflow-hidden rounded-2xl border-[3.5px] border-amber-950/50 bg-[#faf6ee] p-1.5 shadow-lg ring-1 ring-amber-950/20 dark:border-amber-700/60 dark:bg-stone-900 dark:ring-white/10">
+            <div className="relative h-full w-full overflow-hidden rounded-xl border border-amber-950/15 bg-muted/40 shadow-inner">
               <img
                 src={backdropUrl}
-                alt=""
+                alt="Framed wall art"
                 loading="eager"
-                className="h-full w-full object-cover opacity-95 transition-opacity duration-300"
+                className="h-full w-full object-cover opacity-100 transition-opacity duration-300"
                 draggable={false}
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/5 via-transparent to-white/10" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
             </div>
           </div>
         </div>

@@ -1,12 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, MoonStar, Plus, Trash2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Footprints,
+  MoonStar,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import {
   addRotation,
+  calculateHoursForDay,
   removeRotation,
   setDay,
   setNightShiftUntil,
+  setSteps,
+  setWorkHours,
   useApp,
 } from "@/lib/store";
 import type { DayStatus } from "@/lib/store";
@@ -188,6 +199,52 @@ function CalendarPage() {
             />
             <MoonStar className="h-3.5 w-3.5" /> Night shift
           </label>
+
+          {selectedEntry?.status === "present" && (
+            <div className="mt-3.5 border-t border-border/50 pt-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                  <Clock className="h-3.5 w-3.5 text-primary" />
+                  <span>Work Hours: {calculateHoursForDay(app, selected)} hrs</span>
+                </div>
+                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Footprints className="h-3 w-3" />
+                  <span>{(app.steps[selected] || 0).toLocaleString()} steps</span>
+                </div>
+              </div>
+
+              <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span className="text-[10px] text-muted-foreground">Check-in</span>
+                  <input
+                    type="time"
+                    value={
+                      app.workHours[selected]?.checkIn ||
+                      (selectedEntry.night ? app.nightStart : app.checkIn)
+                    }
+                    onChange={(e) =>
+                      setWorkHours(selected, { checkIn: e.target.value })
+                    }
+                    className="mt-0.5 w-full rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                  />
+                </div>
+                <div>
+                  <span className="text-[10px] text-muted-foreground">Check-out</span>
+                  <input
+                    type="time"
+                    value={
+                      app.workHours[selected]?.checkOut ||
+                      (selectedEntry.night ? app.nightEnd : app.checkOut)
+                    }
+                    onChange={(e) =>
+                      setWorkHours(selected, { checkOut: e.target.value })
+                    }
+                    className="mt-0.5 w-full rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div>
