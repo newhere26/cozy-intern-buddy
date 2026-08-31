@@ -45,6 +45,13 @@ function WritingPage() {
   const [openJournal, setOpenJournal] = useState(true);
   const [openTodo, setOpenTodo] = useState(!incomingPrompt);
 
+  useEffect(() => {
+    if (incomingPrompt) {
+      setOpenJournal(true);
+      setOpenTodo(false);
+    }
+  }, [incomingPrompt]);
+
   return (
     <AppShell>
       <div className="space-y-4 px-4 pt-6">
@@ -136,6 +143,12 @@ function JournalEditor({
   const [text, setText] = useState("");
   const [rating, setRating] = useState<number>(3);
   const [prompt, setPrompt] = useState<string | undefined>(initialPrompt);
+
+  useEffect(() => {
+    if (initialPrompt) {
+      setPrompt(initialPrompt);
+    }
+  }, [initialPrompt]);
 
   const pickPrompt = () => {
     setPrompt(JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)]);

@@ -16,12 +16,16 @@ import {
   ChevronRight,
   Clock,
   Coins,
+  Download,
+  ExternalLink,
+  Eye,
   Footprints,
   Heart,
   MoonStar,
   Sparkles,
   Stethoscope,
   TrendingUp,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -436,6 +440,8 @@ function GalleryPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [selectedArt, setSelectedArt] = useState<ArtPiece | null>(null);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between rounded-2xl bg-secondary/30 p-3 text-xs">
@@ -462,18 +468,8 @@ function GalleryPanel() {
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        Paintings from the Art Institute of Chicago. Collect one and it hangs
-        behind your companion.
+        Masterpieces from art history. Collect and unlock artworks to view in high definition or download as serene wallpapers for your device.
       </p>
-
-      {app.activeArt && (
-        <button
-          onClick={() => setActiveArt(undefined)}
-          className="w-full rounded-full border border-border py-1.5 text-[11px] text-muted-foreground"
-        >
-          Take the painting down
-        </button>
-      )}
 
       {status === "loading" && (
         <p className="py-6 text-center text-[11px] text-muted-foreground">
@@ -489,21 +485,36 @@ function GalleryPanel() {
       <div className="grid grid-cols-2 gap-2">
         {pieces.map((art) => {
           const owned = app.ownedArt.includes(art.id);
-          const active = app.activeArt === art.id;
+          const imgUrl = artImageUrl(art.imageId, 843);
           return (
             <div
               key={art.id}
-              className="flex flex-col overflow-hidden rounded-2xl border border-border bg-background/50"
+              className="flex flex-col overflow-hidden rounded-2xl border border-border bg-background/50 transition-all hover:border-primary/40"
             >
-              <img
-                src={artImageUrl(art.imageId, 400)}
-                alt={art.title}
-                loading="lazy"
+              <button
+                type="button"
+                onClick={() => owned && setSelectedArt(art)}
                 className={cn(
-                  "aspect-[4/3] w-full object-cover",
-                  !owned && "opacity-60 saturate-50",
+                  "relative aspect-[4/3] w-full text-left overflow-hidden bg-muted/20",
+                  !owned && "cursor-default",
                 )}
-              />
+              >
+                <img
+                  src={artImageUrl(art.imageId, 400)}
+                  alt={art.title}
+                  loading="lazy"
+                  className={cn(
+                    "h-full w-full object-cover transition-transform duration-300",
+                    owned && "hover:scale-105",
+                    !owned && "opacity-60 saturate-50",
+                  )}
+                />
+                {owned && (
+                  <span className="absolute bottom-1.5 right-1.5 rounded-full bg-black/60 p-1 text-white backdrop-blur-xs">
+                    <Eye className="h-3 w-3" />
+                  </span>
+                )}
+              </button>
               <div className="flex flex-1 flex-col p-2.5">
                 <div className="line-clamp-2 text-[11px] font-medium text-foreground">
                   {art.title}
@@ -514,28 +525,25 @@ function GalleryPanel() {
                 </div>
                 {owned ? (
                   <button
-                    onClick={() => setActiveArt(active ? undefined : art.id)}
-                    className={cn(
-                      "mt-2 w-full rounded-full py-1 text-[10px]",
-                      active
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border text-muted-foreground",
-                    )}
+                    type="button"
+                    onClick={() => setSelectedArt(art)}
+                    className="mt-2 flex items-center justify-center gap-1 rounded-full bg-secondary/80 py-1 text-[10px] font-medium text-foreground hover:bg-secondary"
                   >
-                    {active ? "Hanging" : "Hang it up"}
+                    <Eye className="h-3 w-3" /> View & Save
                   </button>
                 ) : (
                   <button
+                    type="button"
                     disabled={app.credits < art.cost}
                     onClick={() => purchaseArt(art.id, art.cost)}
                     className={cn(
-                      "mt-2 w-full rounded-full py-1 text-[10px]",
+                      "mt-2 w-full rounded-full py-1 text-[10px] font-medium",
                       app.credits >= art.cost
                         ? "bg-accent text-accent-foreground"
                         : "bg-muted text-muted-foreground",
                     )}
                   >
-                    {app.credits >= art.cost ? `Collect · ${art.cost}c` : `${art.cost}c`}
+                    {app.credits >= art.cost ? `Unlock · ${art.cost}c` : `${art.cost}c`}
                   </button>
                 )}
               </div>
@@ -543,6 +551,69 @@ function GalleryPanel() {
           );
         })}
       </div>
+
+      {/* Full-resolution Art Lightbox & Wallpaper Modal */}
+      {selectedArt && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in"
+          onClick={() => setSelectedArt(null)}
+        >
+          <div
+            className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-white/20 bg-card p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-2 pb-3">
+              <div>
+                <h3 className="font-display text-base text-foreground leading-snug">
+                  {selectedArt.title}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {selectedArt.artist}
+                  {selectedArt.date ? ` · ${selectedArt.date}` : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedArt(null)}
+                className="rounded-full bg-secondary/60 p-1.5 text-muted-foreground hover:text-foreground"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="relative my-auto overflow-hidden rounded-2xl border border-border/50 bg-black/40 shadow-inner">
+              <img
+                src={artImageUrl(selectedArt.imageId, 843)}
+                alt={selectedArt.title}
+                className="max-h-[55vh] w-full object-contain"
+              />
+            </div>
+
+            <div className="mt-4 flex gap-2 pt-2">
+              <a
+                href={artImageUrl(selectedArt.imageId, 843)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-secondary/60 py-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open Full HD
+              </a>
+              <a
+                href={artImageUrl(selectedArt.imageId, 843)}
+                download={`${selectedArt.title.toLowerCase().replace(/\s+/g, "-")}.jpg`}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:opacity-90"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Save as Wallpaper
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

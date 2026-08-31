@@ -8,7 +8,6 @@ import { WellnessTile } from "@/components/home/WellnessTile";
 import { ProcedureTile } from "@/components/home/ProcedureTile";
 import { fullyCompletedWeeks } from "@/lib/date";
 import { pickCompanionLine } from "@/lib/companion-lines";
-import { artImageUrl, getArtPiece } from "@/lib/artic";
 import { ArrowDown, Sparkles, Wind } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -58,8 +57,6 @@ function Home() {
       bubble.startsWith("Is there") ||
       bubble.startsWith("Did you"));
 
-  const backdrop = getArtPiece(app.activeArt);
-
   const greeting = !mounted
     ? ""
     : isNight
@@ -103,17 +100,15 @@ function Home() {
                 <span className="absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-b border-r border-border/60 bg-card" />
               </button>
               {bubbleIsQuestion && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    nav({ to: "/journal", search: { prompt: bubble } })
-                  }
-                  className="mx-auto mt-2.5 flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-xs transition-all hover:bg-primary/20 active:scale-95"
+                <Link
+                  to="/journal"
+                  search={{ prompt: bubble }}
+                  className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-xs transition-all hover:bg-primary/20 active:scale-95"
                   aria-label="Write about this in your diary"
                 >
                   <ArrowDown className="h-3.5 w-3.5 shrink-0" />
                   <span>Write about this in your diary →</span>
-                </button>
+                </Link>
               )}
             </div>
           )}
@@ -133,7 +128,6 @@ function Home() {
                 id={app.companion}
                 overlays
                 night={isNight}
-                backdropUrl={backdrop ? artImageUrl(backdrop.imageId, 843) : undefined}
                 completedWeeks={completed}
               />
             </button>
