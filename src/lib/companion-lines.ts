@@ -125,6 +125,15 @@ export function progressLine(): string {
   return options[seedIndex(new Date().toDateString() + "p", options.length)];
 }
 
+function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export function pickDailyLine(kind: "day" | "night"): string {
   const pool = kind === "night" ? NIGHT_LINES : DAY_LINES;
   const seed = new Date().toDateString() + kind;
@@ -134,12 +143,48 @@ export function pickDailyLine(kind: "day" | "night"): string {
   return pool[idx];
 }
 
+/**
+ * Shuffle bag algorithm for companion lines.
+ * Guarantees zero repeats until all lines in the active pool (day or night)
+ * have been drawn, strictly keeping day and night lines exclusive.
+ */
 export function pickCompanionLine(kind: "day" | "night"): string {
-  const now = Date.now();
+  // ~15% chance on tap to sprinkle a milestone progress line
+  if (Math.random() < 0.15) {
+    return progressLine();
+  }
+
   const pool = kind === "night" ? NIGHT_LINES : DAY_LINES;
-  // On tap: rotate through pool, occasionally sprinkle progress line
-  if (Math.random() < 0.2) return progressLine();
-  return pool[Math.floor((now / 1000) % pool.length)];
+  const bagKey = `serenity.shuffleBag.${kind}.v2`;
+
+  let bag: number[] = [];
+  try {
+    const raw = localStorage.getItem(bagKey);
+    if (raw) bag = JSON.parse(raw);
+  } catch {
+    bag = [];
+  }
+
+  // Filter out invalid indices if the pool length has changed
+  bag = bag.filter((i) => typeof i === "number" && i >= 0 && i < pool.length);
+
+  // When the bag is exhausted, refill and shuffle all cards
+  if (bag.length === 0) {
+    const allIndices = Array.from({ length: pool.length }, (_, i) => i);
+    bag = shuffleArray(allIndices);
+  }
+
+  // Draw the next line card
+  const nextIdx = bag.pop() ?? 0;
+
+  // Persist the remaining bag
+  try {
+    localStorage.setItem(bagKey, JSON.stringify(bag));
+  } catch {
+    /* ignore */
+  }
+
+  return pool[nextIdx];
 }
 
 export function pickMealLine(): string {
