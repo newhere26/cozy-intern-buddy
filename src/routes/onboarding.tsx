@@ -230,35 +230,46 @@ function OnboardingPage() {
 
         {step === "steps" && (
           <Field
-            label="Ward Walking & Steps"
-            hint="Hospital duties involve endless walking between wards, casualty, and OT. We track this for your year-end roundup."
+            label="Ward Footsteps & Movement"
+            hint="Hospital duty involves miles of walking between casualty, OT, and wards. We track this for your monthly and annual roundup."
           >
             <div className="space-y-4">
-              <div className="rounded-2xl border border-primary/20 bg-secondary/50 p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <div className="rounded-2xl border border-primary/25 bg-secondary/40 p-4">
+                <div className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
                   <Footprints className="h-5 w-5 text-primary" />
-                  <span>Daily Walking Goal</span>
+                  <span>Sync Device Step Counter</span>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Choose a gentle target for your hospital rounds:
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  Allow Intern Haven to connect to your device's step counter so we can celebrate your walking milestones in your duty roundups.
                 </p>
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  {[4000, 6000, 10000].map((goal) => (
-                    <button
-                      key={goal}
-                      type="button"
-                      onClick={() => setState({ stepGoal: goal })}
-                      className={cn(
-                        "rounded-xl border py-2 text-xs font-semibold transition-all",
-                        (app.stepGoal || 6000) === goal
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background text-muted-foreground",
-                      )}
-                    >
-                      {goal.toLocaleString()} steps
-                    </button>
-                  ))}
+
+                <div className="mt-4 flex flex-col gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setState({ stepGoal: 6000 });
+                      next();
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-xs font-semibold text-primary-foreground shadow-xs transition-transform active:scale-95"
+                  >
+                    <Footprints className="h-4 w-4" />
+                    <span>Connect Phone Step Tracker</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      next();
+                    }}
+                    className="w-full rounded-full border border-border bg-background py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground active:scale-95"
+                  >
+                    Skip · I'll log steps manually
+                  </button>
                 </div>
+              </div>
+
+              <div className="rounded-2xl border border-border/40 bg-card/60 p-3.5 text-[11px] leading-relaxed text-muted-foreground">
+                🔒 <strong className="text-foreground">Privacy Note:</strong> Your activity data is stored in your personal, encrypted account strictly to generate your private reflections and roundups. It is never shared with third parties or advertisers.
               </div>
             </div>
           </Field>

@@ -114,6 +114,9 @@ export function progressLine(): string {
   const pct = Math.min(100, (done / total) * 100);
   const days = daysSince(s.startDate);
   const dayPct = ((1 / (total * 7)) * 100).toFixed(3);
+  const todayKeyStr = new Date().toISOString().slice(0, 10);
+  const rotationsDone = s.rotations.filter((r) => r.end < todayKeyStr).length;
+
   const options = [
     `You're ${done} weeks in. Only ${left} to go.`,
     `You're ${pct.toFixed(0)}% through your internship.`,
@@ -121,6 +124,21 @@ export function progressLine(): string {
     `Day ${days} of ${total * 7}. Softly forward.`,
     `${left} weeks left. That's a finite number.`,
     `Week ${cur} of ${total}. You are on the map.`,
+    pct >= 25
+      ? "Quarter-mark behind you. You are already an experienced intern."
+      : `Building momentum — week ${cur} in progress.`,
+    pct >= 50
+      ? "Halfway mark! The doctor you were on day one would be amazed by you."
+      : "Every shift adds another layer of clinical instinct.",
+    pct >= 75
+      ? "Three quarters done. The wards don't intimidate you anymore."
+      : "Small steady steps. You are doing real medicine.",
+    left <= 10
+      ? "Single-digit weeks left. You can see the finish line."
+      : `${done} weeks completed with quiet resilience.`,
+    rotationsDone > 0
+      ? `${rotationsDone} posting${rotationsDone > 1 ? "s" : ""} finished. Each department has left its mark on your hands.`
+      : "Your foundation is growing stronger with every patient.",
   ];
   return options[seedIndex(new Date().toDateString() + "p", options.length)];
 }
@@ -149,8 +167,8 @@ export function pickDailyLine(kind: "day" | "night"): string {
  * have been drawn, strictly keeping day and night lines exclusive.
  */
 export function pickCompanionLine(kind: "day" | "night"): string {
-  // ~15% chance on tap to sprinkle a milestone progress line
-  if (Math.random() < 0.15) {
+  // 7% chance on tap to sprinkle a milestone journey line
+  if (Math.random() < 0.07) {
     return progressLine();
   }
 

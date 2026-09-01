@@ -11,7 +11,7 @@ import {
   toggleTodoRemind,
   useApp,
 } from "@/lib/store";
-import { JOURNAL_PROMPTS } from "@/lib/data";
+import { JOURNAL_PROMPTS, pickJournalPrompt } from "@/lib/data";
 import { fmtDate, toKey } from "@/lib/date";
 import { cancelTodoLadder, requestNotifPermission, scheduleTodoLadder } from "@/lib/notify";
 import { playScratch } from "@/lib/sound";
@@ -151,7 +151,7 @@ function JournalEditor({
   }, [initialPrompt]);
 
   const pickPrompt = () => {
-    setPrompt(JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)]);
+    setPrompt(pickJournalPrompt());
   };
 
   const save = () => {

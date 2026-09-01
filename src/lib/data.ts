@@ -238,6 +238,40 @@ export const JOURNAL_PROMPTS = [
   "One thing you want to leave at the hospital tonight.",
 ];
 
+/**
+ * Draws from a persistent shuffle bag of journal prompts to prevent immediate repeats.
+ */
+export function pickJournalPrompt(): string {
+  const bagKey = "serenity.journalPromptsBag.v2";
+  let bag: number[] = [];
+  try {
+    const raw = localStorage.getItem(bagKey);
+    if (raw) bag = JSON.parse(raw);
+  } catch {
+    bag = [];
+  }
+
+  bag = bag.filter((i) => typeof i === "number" && i >= 0 && i < JOURNAL_PROMPTS.length);
+
+  if (bag.length === 0) {
+    const allIndices = Array.from({ length: JOURNAL_PROMPTS.length }, (_, i) => i);
+    for (let i = allIndices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allIndices[i], allIndices[j]] = [allIndices[j], allIndices[i]];
+    }
+    bag = allIndices;
+  }
+
+  const nextIdx = bag.pop() ?? 0;
+  try {
+    localStorage.setItem(bagKey, JSON.stringify(bag));
+  } catch {
+    /* ignore */
+  }
+
+  return JOURNAL_PROMPTS[nextIdx];
+}
+
 // Bengali → English phrasebook (v1 language pair)
 export const PHRASEBOOK: { bn: string; roman: string; en: string }[] = [
   { bn: "আমার বুকে ব্যথা হচ্ছে।", roman: "Amar buke betha hocche.", en: "I have chest pain." },
