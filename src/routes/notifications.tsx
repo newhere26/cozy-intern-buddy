@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronLeft } from "lucide-react";
+import { useState } from "react";
+import { Bell, CalendarCheck, ChevronLeft, Droplets, Info, Sparkles, Utensils } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { setNotifPrefs, useApp } from "@/lib/store";
 import type { NotifPrefs } from "@/lib/store";
-import { requestNotifPermission } from "@/lib/notify";
+import { requestNotifPermission, sendTestNotification } from "@/lib/notify";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/notifications")({
@@ -73,9 +74,42 @@ function NotificationsPage() {
   const app = useApp();
   const p = app.notifPrefs;
 
+  const [permState, setPermState] = useState<string>(() =>
+    typeof Notification !== "undefined" ? Notification.permission : "unsupported",
+  );
+  const [testMsg, setTestMsg] = useState<string | null>(null);
+
+  const handleAllow = async () => {
+    const perm = await requestNotifPermission();
+    setPermState(perm);
+    if (perm === "granted") {
+      setTestMsg("Notifications enabled! Try a test nudge below.");
+    } else if (perm === "denied") {
+      setTestMsg("Notifications are blocked in your browser settings. Please allow notifications for this site to receive reminders.");
+    }
+  };
+
+  const handleTest = async (kind: "hydration" | "nourishment" | "attendance") => {
+    setTestMsg(null);
+    const res = await sendTestNotification(kind);
+    if (typeof Notification !== "undefined") {
+      setPermState(Notification.permission);
+    }
+    if (!res.success) {
+      if (res.reason === "denied") {
+        setTestMsg("Notifications are blocked. Please enable notification permissions in your browser address bar/settings.");
+      } else if (res.reason === "unsupported") {
+        setTestMsg("Browser notifications are not supported on this browser or device.");
+      }
+    } else {
+      setTestMsg(`Sent sample ${kind} reminder! Check your notification bar.`);
+      setTimeout(() => setTestMsg(null), 5000);
+    }
+  };
+
   return (
     <AppShell>
-      <div className="space-y-4 px-4 pt-6">
+      <div className="space-y-4 px-4 pt-6 pb-8">
         <Link to="/journey" className="flex items-center gap-1 text-xs text-muted-foreground">
           <ChevronLeft className="h-3.5 w-3.5" /> Journey
         </Link>
@@ -128,7 +162,7 @@ function NotificationsPage() {
         </section>
 
         <section className="rounded-3xl bg-card p-4">
-          <h2 className="text-sm text-foreground">Quiet hours</h2>
+          <h2 className="text-sm font-medium text-foreground">Quiet hours</h2>
           <p className="mb-3 text-[11px] text-muted-foreground">
             Nothing will buzz between these times. Sleep is medicine too.
           </p>
@@ -154,16 +188,71 @@ function NotificationsPage() {
           </div>
         </section>
 
+        {/* Permission Action Button */}
         <button
-          onClick={() => void requestNotifPermission()}
-          className="w-full rounded-2xl bg-primary py-3 text-sm text-primary-foreground"
+          onClick={() => void handleAllow()}
+          className={cn(
+            "flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-medium transition-colors active:scale-98",
+            permState === "granted"
+              ? "border border-border bg-secondary/40 text-foreground"
+              : "bg-primary text-primary-foreground shadow-xs",
+          )}
         >
-          Allow notifications on this device
+          <Bell className="h-4 w-4" />
+          {permState === "granted"
+            ? "Notifications enabled on this device"
+            : permState === "denied"
+              ? "Notifications blocked (tap to check)"
+              : "Allow notifications on this device"}
         </button>
-        <p className="pb-4 text-center text-[10px] text-muted-foreground">
-          Reminders come with Snooze 30 min and 1 hour buttons.
-        </p>
+
+        {testMsg && (
+          <div className="flex items-start gap-2 rounded-2xl border border-primary/20 bg-primary/10 p-3 text-xs text-primary animate-in fade-in">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" />
+            <p className="leading-relaxed">{testMsg}</p>
+          </div>
+        )}
+
+        {/* Send Test Notification Section */}
+        <section className="rounded-3xl bg-card p-4 space-y-2.5">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-accent" />
+            <h2 className="text-sm font-medium text-foreground">Send test notification</h2>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Test how real reminders look on your lock screen with Snooze 30m and 1 hour buttons.
+          </p>
+
+          <div className="grid grid-cols-3 gap-2 pt-1">
+            <button
+              onClick={() => void handleTest("hydration")}
+              className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-secondary/30 p-2.5 text-center transition-colors hover:bg-secondary/60 active:scale-95"
+            >
+              <Droplets className="h-4 w-4 text-sky-400" />
+              <span className="text-[11px] font-medium text-foreground">Hydration</span>
+            </button>
+            <button
+              onClick={() => void handleTest("nourishment")}
+              className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-secondary/30 p-2.5 text-center transition-colors hover:bg-secondary/60 active:scale-95"
+            >
+              <Utensils className="h-4 w-4 text-amber-400" />
+              <span className="text-[11px] font-medium text-foreground">Nourishment</span>
+            </button>
+            <button
+              onClick={() => void handleTest("attendance")}
+              className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-secondary/30 p-2.5 text-center transition-colors hover:bg-secondary/60 active:scale-95"
+            >
+              <CalendarCheck className="h-4 w-4 text-emerald-400" />
+              <span className="text-[11px] font-medium text-foreground">Attendance</span>
+            </button>
+          </div>
+
+          <p className="text-[10px] text-muted-foreground italic pt-1">
+            Test notifications bypass quiet hours (they're user-initiated) so you can test snoozing.
+          </p>
+        </section>
       </div>
     </AppShell>
   );
 }
+

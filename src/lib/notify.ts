@@ -1,4 +1,5 @@
-import type { NotifPrefs } from "./store";
+import { getState, type NotifPrefs } from "./store";
+import { toast } from "sonner";
 
 // Lightweight browser notification scheduler with a persisted queue.
 // Reminders survive reload (rescheduled on init). Best-effort: only fires
@@ -37,6 +38,57 @@ export async function requestNotifPermission() {
   return Notification.permission;
 }
 
+function toMinutes(hhmm: string) {
+  const [h, m] = hhmm.split(":").map(Number);
+  if (Number.isNaN(h)) return null;
+  return h * 60 + (m || 0);
+}
+
+/** Format an epoch timestamp as h:mm A (e.g. 7:30 AM). */
+export function formatTimeAmPm(epochMs: number): string {
+  const d = new Date(epochMs);
+  let h = d.getHours();
+  const m = d.getMinutes().toString().padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+}
+
+/**
+ * Given a target timestamp and the user's notification prefs, pushes the time forward
+ * to the exact moment quiet hours end if it lands inside quiet hours (handles midnight wrap).
+ */
+export function adjustTimeForQuietHours(targetMs: number, prefs?: NotifPrefs): number {
+  const p = prefs ?? getState().notifPrefs;
+  if (!p) return targetMs;
+  const start = toMinutes(p.quietStart);
+  const end = toMinutes(p.quietEnd);
+  if (start == null || end == null || start === end) return targetMs;
+
+  const d = new Date(targetMs);
+  const mins = d.getHours() * 60 + d.getMinutes();
+  const isQuiet = start < end ? mins >= start && mins < end : mins >= start || mins < end;
+
+  if (!isQuiet) return targetMs;
+
+  const endH = Math.floor(end / 60);
+  const endM = end % 60;
+
+  const adjusted = new Date(targetMs);
+  if (start > end && mins >= start) {
+    // Falls in late evening portion of midnight-wrapping quiet hours -> ends tomorrow morning
+    adjusted.setDate(adjusted.getDate() + 1);
+  }
+  adjusted.setHours(endH, endM, 0, 0);
+
+  // Guard against any edge case where adjusted time is in the past
+  if (adjusted.getTime() <= targetMs) {
+    adjusted.setDate(adjusted.getDate() + 1);
+  }
+
+  return adjusted.getTime();
+}
+
 function fire(e: QueueEntry) {
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
     const sw = navigator.serviceWorker?.controller;
@@ -54,17 +106,40 @@ function fire(e: QueueEntry) {
   removeFromQueue(e.id);
 }
 
-/** Push a reminder forward by n minutes. */
-export function snooze(entry: { id: string; title: string; body: string }, minutes: number) {
+/**
+ * Push a reminder forward by n minutes. Respects quiet hours and reports the next nudge time.
+ * Returns the scheduled timestamp.
+ */
+export function snooze(
+  entry: { id: string; title: string; body: string },
+  minutes: number,
+  prefs?: NotifPrefs,
+): number {
+  const p = prefs ?? getState().notifPrefs;
+  const targetMs = Date.now() + minutes * 60_000;
+  const finalAt = adjustTimeForQuietHours(targetMs, p);
+  const timeStr = formatTimeAmPm(finalAt);
+
+  try {
+    toast(`Okay — I'll nudge you again at ${timeStr}.`);
+  } catch {
+    /* ignore */
+  }
+
+  const baseBody = entry.body.replace(/\s*\(Next nudge at [^)]+\)/, "");
+  const nextBody = `${baseBody} (Next nudge at ${timeStr})`;
+
   schedule([
     {
       id: `${entry.id}:snoozed:${Date.now()}`,
       title: entry.title,
-      body: entry.body,
-      at: Date.now() + minutes * 60_000,
+      body: nextBody,
+      at: finalAt,
       snoozable: true,
     },
   ]);
+
+  return finalAt;
 }
 
 let swReady = false;
@@ -77,7 +152,10 @@ export async function ensureNotifWorker() {
     navigator.serviceWorker.addEventListener("message", (ev) => {
       const d = ev.data || {};
       if (d.type === "snooze") {
-        snooze({ id: String(d.tag ?? "care"), title: d.title, body: d.body }, Number(d.minutes) || 30);
+        snooze(
+          { id: String(d.tag ?? "care"), title: d.title || "Gentle reminder", body: d.body || "" },
+          Number(d.minutes) || 30,
+        );
       }
     });
   } catch {
@@ -180,12 +258,6 @@ function todayAt(hh: number, mm = 0) {
 function futureOnly(entries: QueueEntry[]) {
   const now = Date.now();
   return entries.filter((e) => e.at > now + 30_000);
-}
-
-function toMinutes(hhmm: string) {
-  const [h, m] = hhmm.split(":").map(Number);
-  if (Number.isNaN(h)) return null;
-  return h * 60 + (m || 0);
 }
 
 /** True when a timestamp falls inside the user's quiet hours (can wrap midnight). */
@@ -298,4 +370,52 @@ export function scheduleDailyCare(ctx: DailyCareContext) {
 
 export function cancelCareReminder(kind: "water" | "meal" | "attendance") {
   cancelByPrefix(`care:${kind}`);
+}
+
+/**
+ * Fires an immediate sample notification for testing.
+ * Bypasses quiet hours (user-initiated) and includes snooze buttons.
+ */
+export async function sendTestNotification(
+  kind: "hydration" | "nourishment" | "attendance",
+  ctx?: Partial<DailyCareContext>,
+): Promise<{ success: boolean; reason?: "denied" | "unsupported" }> {
+  if (typeof Notification === "undefined") {
+    return { success: false, reason: "unsupported" };
+  }
+  const perm = await requestNotifPermission();
+  if (perm !== "granted") {
+    return { success: false, reason: "denied" };
+  }
+
+  await ensureNotifWorker();
+
+  const state = getState();
+  const who = ctx?.name || (state.name ? `Dr. ${state.name}` : "doctor");
+  let title = "Gentle reminder";
+  let body = "";
+
+  if (kind === "hydration") {
+    title = "A little water?";
+    const lineFn = pick(HYDRATION_LINES, Math.floor(Math.random() * HYDRATION_LINES.length));
+    body = lineFn(who);
+  } else if (kind === "nourishment") {
+    title = "Something to eat";
+    const meals = ["breakfast", "lunch", "dinner"] as const;
+    const m = meals[Math.floor(Math.random() * meals.length)];
+    body = MEAL_LINES[m]?.(who) ?? `Please eat something, ${who}. 🍲`;
+  } else {
+    title = "Attendance";
+    body = `Before you rest, ${who} — today isn't marked yet. One tap and ${ctx?.companionName || "I"} will tuck it away. 🌙`;
+  }
+
+  fire({
+    id: `test:${kind}:${Date.now()}`,
+    title,
+    body,
+    at: Date.now(),
+    snoozable: true,
+  });
+
+  return { success: true };
 }
