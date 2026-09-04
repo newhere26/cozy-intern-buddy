@@ -397,27 +397,91 @@ function HASBLED() {
 
 function PedsDoses() {
   const [wt, setWt] = useState(15);
-  const rows: [string, string, string][] = [
-    ["Paracetamol", "15 mg/kg q6h", `${(wt * 15).toFixed(0)} mg`],
-    ["Ibuprofen", "10 mg/kg q8h", `${(wt * 10).toFixed(0)} mg`],
-    ["Amoxicillin", "25 mg/kg q12h", `${(wt * 25).toFixed(0)} mg`],
-    ["Ceftriaxone", "50 mg/kg/day", `${(wt * 50).toFixed(0)} mg`],
-    ["ORS (mild dehyd.)", "50 mL/kg over 4h", `${(wt * 50).toFixed(0)} mL`],
-    ["Adrenaline IM", "0.01 mg/kg", `${(wt * 0.01).toFixed(2)} mg`],
-    ["Dextrose 10% bolus", "2 mL/kg", `${(wt * 2).toFixed(0)} mL`],
+  const rows = [
+    {
+      drug: "Paracetamol",
+      rule: "10–15 mg/kg q4–6h",
+      range: `${(wt * 10).toFixed(0)}–${(wt * 15).toFixed(0)} mg / dose`,
+      max: "Max 75 mg/kg/day (≤1 g/dose, ≤4 g/day)",
+      val: `${(wt * 15).toFixed(0)} mg`,
+    },
+    {
+      drug: "Ibuprofen",
+      rule: "5–10 mg/kg q6–8h (>3 mo)",
+      range: `${(wt * 5).toFixed(0)}–${(wt * 10).toFixed(0)} mg / dose`,
+      max: "Max 40 mg/kg/day (≤400 mg/dose, ≤2.4 g/day)",
+      val: `${(wt * 10).toFixed(0)} mg`,
+    },
+    {
+      drug: "Amoxicillin + Clav.",
+      rule: "25–45 mg/kg/day divided BD–TDS",
+      range: `${(wt * 25).toFixed(0)}–${(wt * 45).toFixed(0)} mg/day`,
+      max: "Max 90 mg/kg/day (otitis / severe)",
+      val: `${(wt * 30).toFixed(0)} mg/day`,
+    },
+    {
+      drug: "Ceftriaxone",
+      rule: "50–75 mg/kg/day OD–BD",
+      range: `${(wt * 50).toFixed(0)}–${(wt * 75).toFixed(0)} mg/day`,
+      max: "Max 100 mg/kg/day in meningitis (≤4 g/day)",
+      val: `${(wt * 50).toFixed(0)} mg/day`,
+    },
+    {
+      drug: "Ondansetron",
+      rule: "0.15 mg/kg/dose q8h",
+      range: `${(wt * 0.15).toFixed(1)} mg / dose`,
+      max: "Max 4–8 mg/dose (≤32 mg/day)",
+      val: `${(wt * 0.15).toFixed(1)} mg`,
+    },
+    {
+      drug: "Adrenaline IM (1:1000)",
+      rule: "0.01 mg/kg (0.01 mL/kg) stat",
+      range: `${(wt * 0.01).toFixed(2)} mg (${(wt * 0.01).toFixed(2)} mL)`,
+      max: "Max 0.3 mg (child) / 0.5 mg (adult)",
+      val: `${(wt * 0.01).toFixed(2)} mg`,
+    },
+    {
+      drug: "ORS (mild dehyd.)",
+      rule: "50–75 mL/kg over 4h",
+      range: `${(wt * 50).toFixed(0)}–${(wt * 75).toFixed(0)} mL total`,
+      max: "+ 10 mL/kg per loose stool",
+      val: `${(wt * 50).toFixed(0)} mL`,
+    },
+    {
+      drug: "Dextrose 10% bolus",
+      rule: "2 mL/kg (0.2 g/kg) slow IV",
+      range: `${(wt * 2).toFixed(0)} mL stat`,
+      max: "Recheck blood sugar in 15 min",
+      val: `${(wt * 2).toFixed(0)} mL`,
+    },
   ];
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <NumberField label="Weight" suffix="kg" value={wt} onChange={setWt} />
-      {rows.map(([d, rule, val]) => (
-        <div key={d} className="flex items-center justify-between rounded-2xl bg-card p-3">
-          <div>
-            <div className="text-sm text-foreground">{d}</div>
-            <div className="text-[10px] text-muted-foreground">{rule}</div>
+      <div className="space-y-2">
+        {rows.map((r) => (
+          <div key={r.drug} className="rounded-2xl border border-border bg-card p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="font-display text-sm font-medium text-foreground">{r.drug}</div>
+                <div className="text-[11px] text-muted-foreground">{r.rule}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-bold text-accent">{r.val}</div>
+                <div className="text-[10px] text-muted-foreground">std calc</div>
+              </div>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border/50 pt-2 text-[10px]">
+              <div className="text-primary font-medium">
+                Range: <span className="text-foreground">{r.range}</span>
+              </div>
+              <div className="text-amber-600 dark:text-amber-400">
+                Safe cap: <span className="text-muted-foreground">{r.max}</span>
+              </div>
+            </div>
           </div>
-          <div className="text-sm font-medium text-accent">{val}</div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -672,6 +736,18 @@ function DrugsRef() {
               </span>
             </div>
             <div className="mt-1 text-[11px] text-foreground">{d.dose}</div>
+            {d.doseRange && (
+              <div className="mt-1 flex items-start gap-1 text-[10px] text-primary">
+                <span className="font-semibold shrink-0">Range:</span>
+                <span>{d.doseRange}</span>
+              </div>
+            )}
+            {d.maxDose && (
+              <div className="mt-0.5 flex items-start gap-1 text-[10px] text-amber-600 dark:text-amber-400">
+                <span className="font-semibold shrink-0">Max safe:</span>
+                <span>{d.maxDose}</span>
+              </div>
+            )}
             <div className="mt-0.5 text-[10px] text-muted-foreground">Route: {d.route}</div>
             <div className="mt-1.5 flex flex-wrap gap-1">
               {d.brands.map((b) => (

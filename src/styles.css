@@ -290,6 +290,42 @@
   animation: water-wave 3.5s linear infinite;
 }
 
+/* ---- companion alive micro-animations ---- */
+@keyframes companion-breathe {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.025);
+  }
+}
+
+@keyframes companion-tap {
+  0% { transform: scale(1, 1); }
+  20% { transform: scale(1.08, 0.92) translateY(2px); }
+  45% { transform: scale(0.95, 1.06) translateY(-10px); }
+  70% { transform: scale(1.03, 0.98) translateY(-2px); }
+  100% { transform: scale(1, 1) translateY(0); }
+}
+
+@keyframes heart-rise {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  30% { opacity: 1; transform: translateY(-16px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-44px) scale(0.8); }
+}
+
+@utility companion-breathe {
+  animation: companion-breathe 3.6s ease-in-out infinite;
+}
+
+@utility companion-tap {
+  animation: companion-tap 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@utility heart-rise {
+  animation: heart-rise 1s ease-out forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .droplet-fall,
   .droplet-wobble,
@@ -297,7 +333,10 @@
   .bubble-up,
   .water-wave,
   .breathe,
-  .float-slow {
+  .float-slow,
+  .companion-breathe,
+  .companion-tap,
+  .heart-rise {
     animation: none !important;
   }
 }

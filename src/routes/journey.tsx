@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { claimCredits, purchaseArt, setActiveArt, useApp } from "@/lib/store";
+import { claimCredits, purchaseArt, setActiveArt, setAnimationsEnabled, useApp } from "@/lib/store";
 import { fmtDate, fullyCompletedWeeks, daysSince } from "@/lib/date";
 import { postingColor, rotationForDate } from "@/lib/postings";
 import { artImageUrl, galleryFromCache, loadGallery, type ArtPiece } from "@/lib/artic";
@@ -146,6 +146,37 @@ function JourneyPage() {
           </span>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </Link>
+
+        {/* Settings tile: Companion animations toggle */}
+        <div className="flex items-center justify-between rounded-3xl bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-2xl bg-primary/10 text-primary">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-foreground">Companion animations</div>
+              <div className="text-[11px] text-muted-foreground">Breathing & tap bounce effects</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAnimationsEnabled(app.animationsEnabled === false)}
+            className={cn(
+              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+              app.animationsEnabled !== false ? "bg-primary" : "bg-muted",
+            )}
+            role="switch"
+            aria-checked={app.animationsEnabled !== false}
+            aria-label="Toggle companion animations"
+          >
+            <span
+              className={cn(
+                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow-md ring-0 transition duration-200 ease-in-out",
+                app.animationsEnabled !== false ? "translate-x-5" : "translate-x-0",
+              )}
+            />
+          </button>
+        </div>
       </div>
     </AppShell>
   );

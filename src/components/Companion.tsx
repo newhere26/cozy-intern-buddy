@@ -1,5 +1,6 @@
+import { useState, useCallback } from "react";
 import { COMPANIONS } from "@/lib/data";
-import type { CompanionId } from "@/lib/store";
+import { useApp, type CompanionId } from "@/lib/store";
 import { activeMilestones } from "@/lib/store-items";
 import { cn } from "@/lib/utils";
 
@@ -74,6 +75,8 @@ export function Companion({
   overlays = false,
   night = false,
   completedWeeks = 0,
+  animationsEnabled,
+  onTap,
 }: {
   id: CompanionId;
   className?: string;
@@ -81,7 +84,28 @@ export function Companion({
   overlays?: boolean;
   night?: boolean;
   completedWeeks?: number;
+  animationsEnabled?: boolean;
+  onTap?: () => void;
 }) {
+  const app = useApp();
+  const enabled = animationsEnabled !== undefined ? animationsEnabled : app.animationsEnabled !== false;
+
+  const [tapped, setTapped] = useState(false);
+  const [hearts, setHearts] = useState<{ id: number; x: number }[]>([]);
+
+  const handleClick = useCallback(() => {
+    if (enabled) {
+      setTapped(true);
+      const newHeart = { id: Date.now(), x: 40 + Math.random() * 20 };
+      setHearts((prev) => [...prev.slice(-3), newHeart]);
+      setTimeout(() => setTapped(false), 550);
+      setTimeout(() => {
+        setHearts((prev) => prev.filter((h) => h.id !== newHeart.id));
+      }, 1000);
+    }
+    onTap?.();
+  }, [enabled, onTap]);
+
   const c = COMPANIONS.find((x) => x.id === id) ?? COMPANIONS[0];
   const anchors = ANCHORS[c.id] ?? ANCHORS.capybara;
   const dims =
@@ -124,7 +148,13 @@ export function Companion({
 
   return (
     <div
-      className={cn("relative", dims, className)}
+      onClick={handleClick}
+      className={cn(
+        "relative",
+        dims,
+        className,
+        enabled && (tapped ? "companion-tap" : "companion-breathe"),
+      )}
       style={{ containerType: "inline-size" }}
     >
       {/* Night lamp glow behind companion */}
@@ -135,10 +165,25 @@ export function Companion({
         </div>
       )}
 
+      {/* Tap Heart Rise particle */}
+      {enabled &&
+        hearts.map((h) => (
+          <span
+            key={h.id}
+            className="pointer-events-none absolute z-30 select-none text-xl heart-rise"
+            style={{ left: `${h.x}%`, top: "20%" }}
+          >
+            💖
+          </span>
+        ))}
+
       <img
         src={c.img}
         alt={c.name}
-        className="relative z-10 h-full w-full select-none object-contain float-slow drop-shadow-2xl"
+        className={cn(
+          "relative z-10 h-full w-full select-none object-contain drop-shadow-2xl",
+          !enabled && "float-slow",
+        )}
         draggable={false}
       />
 
@@ -168,3 +213,4 @@ export function Companion({
     </div>
   );
 }
+

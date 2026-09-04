@@ -123,6 +123,7 @@ export interface AppState {
   activeArt?: string;
   notifPrefs: NotifPrefs;
   rotationReviews: Record<string, RotationReview>;
+  animationsEnabled: boolean;
 }
 
 
@@ -173,6 +174,7 @@ const defaultState: AppState = {
     quietEnd: "07:00",
   },
   rotationReviews: {},
+  animationsEnabled: true,
 };
 
 
@@ -447,6 +449,10 @@ export function bumpSteps(date: string, delta: number) {
 
 export function setStepGoal(goal: number) {
   setState(() => ({ stepGoal: Math.max(1000, goal) }));
+}
+
+export function setAnimationsEnabled(enabled: boolean) {
+  setState(() => ({ animationsEnabled: enabled }));
 }
 
 export function setWorkHours(
