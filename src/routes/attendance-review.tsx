@@ -10,12 +10,12 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/attendance-review")({
   head: () => ({
     meta: [
-      { title: "Attendance review — Serenity" },
+      { title: "Attendance review — WithYou" },
       {
         name: "description",
         content: "See which older days were marked present for you, and change any of them.",
       },
-      { property: "og:title", content: "Attendance review — Serenity" },
+      { property: "og:title", content: "Attendance review — WithYou" },
       {
         property: "og:description",
         content: "See which older days were marked present for you, and change any of them.",

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/relaxation")({
   head: () => ({
     meta: [
-      { title: "Mindful Breathing Space — Serenity" },
+      { title: "Mindful Breathing Space — WithYou" },
       { name: "description", content: "Guided breathing techniques for a quiet minute." },
     ],
   }),

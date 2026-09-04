@@ -23,9 +23,9 @@ import {
 export const Route = createFileRoute("/tools")({
   head: () => ({
     meta: [
-      { title: "Clinical Bedside Tools — Serenity" },
+      { title: "Clinical Bedside Tools — WithYou" },
       { name: "description", content: "Offline calculators, Bengali phrasebook, and a common drugs reference." },
-      { property: "og:title", content: "Clinical Bedside Tools — Serenity" },
+      { property: "og:title", content: "Clinical Bedside Tools — WithYou" },
       { property: "og:description", content: "Quiet, offline-first tools for the ward." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

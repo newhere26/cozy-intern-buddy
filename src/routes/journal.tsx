@@ -33,7 +33,7 @@ export const Route = createFileRoute("/journal")({
   }),
   head: () => ({
     meta: [
-      { title: "Writing — Serenity" },
+      { title: "Writing — WithYou" },
       { name: "description", content: "Bedside diary and to-do list." },
     ],
   }),

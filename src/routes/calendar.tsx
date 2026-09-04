@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/calendar")({
   head: () => ({
     meta: [
-      { title: "Calendar — Serenity" },
+      { title: "Calendar — WithYou" },
       { name: "description", content: "Log rotations, attendance, and night shifts." },
     ],
   }),

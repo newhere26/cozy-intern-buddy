@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/journey")({
   head: () => ({
     meta: [
-      { title: "Journey — Serenity" },
+      { title: "Journey — WithYou" },
       { name: "description", content: "A quiet view of how far you've come." },
     ],
   }),

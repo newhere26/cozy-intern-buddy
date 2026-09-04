@@ -11,7 +11,7 @@ import { ArrowRight, Footprints } from "lucide-react";
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "Welcome — Serenity" },
+      { title: "Welcome — WithYou" },
       { name: "description", content: "Set up your cozy companion for internship." },
       { name: "robots", content: "noindex" },
     ],
@@ -74,7 +74,7 @@ function OnboardingPage() {
             <div className="h-48 w-48">
               <Companion id={app.companion} />
             </div>
-            <h1 className="mt-6 font-display text-3xl text-foreground">Serenity</h1>
+            <h1 className="mt-6 font-display text-3xl text-foreground">WithYou</h1>
             <p className="mt-3 max-w-xs text-sm text-muted-foreground">
               A quiet companion for your internship. No streaks. No shame. Just soft company for hard days.
             </p>

@@ -69,14 +69,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Serenity — a cozy companion for medical interns" },
+      { title: "WithYou — a cozy companion for medical interns" },
       {
         name: "description",
         content:
           "A gentle app for MBBS and medical interns. Track rotations, log procedures, journal, and take small care of yourself — with a soft animal companion by your side.",
       },
-      { name: "author", content: "Serenity" },
-      { property: "og:title", content: "Serenity — a cozy companion for medical interns" },
+      { name: "author", content: "WithYou" },
+      { property: "og:title", content: "WithYou — a cozy companion for medical interns" },
       {
         property: "og:description",
         content:

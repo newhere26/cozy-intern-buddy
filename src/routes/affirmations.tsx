@@ -6,7 +6,7 @@ import { ArrowLeft, RefreshCcw } from "lucide-react";
 export const Route = createFileRoute("/affirmations")({
   head: () => ({
     meta: [
-      { title: "Affirmations — Serenity" },
+      { title: "Affirmations — WithYou" },
       { name: "description", content: "Gentle, medicine-flavoured affirmations for interns." },
     ],
   }),

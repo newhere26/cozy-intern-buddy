@@ -9,12 +9,12 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/notifications")({
   head: () => ({
     meta: [
-      { title: "Reminders — Serenity" },
+      { title: "Reminders — WithYou" },
       {
         name: "description",
         content: "Choose which gentle nudges you get for water, meals and attendance, and set quiet hours.",
       },
-      { property: "og:title", content: "Reminders — Serenity" },
+      { property: "og:title", content: "Reminders — WithYou" },
       {
         property: "og:description",
         content: "Choose which gentle nudges you get for water, meals and attendance, and set quiet hours.",
