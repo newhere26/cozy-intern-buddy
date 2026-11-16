@@ -1,4 +1,5 @@
 import type { AppState } from "@/lib/store";
+import { toKey } from "@/lib/date";
 import { FELT_EMOJI } from "@/components/PostingReview";
 
 export interface Achievement {
@@ -18,7 +19,7 @@ function daysBetween(a: string, b: string) {
 
 export function buildAchievements(app: AppState): Achievement[] {
   const out: Achievement[] = [];
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toKey(new Date());
   const procs = app.procedures;
   const dayEntries = Object.entries(app.days);
 

@@ -10,6 +10,7 @@ import {
 import { canLogAttendance } from "@/lib/shift";
 import { COMPANIONS } from "@/lib/data";
 import { rotationForDate } from "@/lib/postings";
+import { resumeStepCountingIfEnabled } from "@/lib/pedometer";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const app = useApp();
@@ -23,6 +24,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     backfillPresentDays();
   }, [app.onboarded, app.startDate]);
+
+  // Keep counting steps if the user already allowed the motion sensor.
+  useEffect(() => {
+    if (app.onboarded) resumeStepCountingIfEnabled();
+  }, [app.onboarded]);
 
   // Cozy daily nudges: hydration, meals, attendance.
   useEffect(() => {

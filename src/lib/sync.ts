@@ -1,5 +1,5 @@
 /**
- * Cloud Sync Layer for Serenity / Intern Haven.
+ * Cloud Sync Layer for WithYou.
  * Enables backing up and syncing all local app state, rotation reviews,
  * and yearly metrics to cloud persistence (e.g. Firebase Firestore / Cloud DB).
  */

@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Disclaimer } from "@/components/Disclaimer";
+import { bumpBreathSeconds, todayKey, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/relaxation")({
   head: () => ({
@@ -18,22 +20,22 @@ const PATTERNS = {
   box: {
     in: 4, hold: 4, out: 4, restHold: 4,
     label: "4-4-4-4 Box Breathing",
-    blurb: "Centuries-old technique to instantly relieve acute stress and center the mind.",
+    blurb: "Even, steady breathing. A simple way to pause and settle.",
   },
   "4-7-8": {
     in: 4, hold: 7, out: 8, restHold: 0,
     label: "4-7-8 Calming Breath",
-    blurb: "Dr. Andrew Weil method that acts as a natural nervous system tranquilizer.",
+    blurb: "A slow, calming rhythm with a long exhale.",
   },
   "5-5": {
     in: 5, hold: 0, out: 5, restHold: 0,
     label: "5-5 Resonance Breathing",
-    blurb: "Maximizes heart rate variability (HRV) and balances autonomic function.",
+    blurb: "Smooth, even breaths at a gentle pace.",
   },
   "4-4": {
     in: 4, hold: 0, out: 4, restHold: 0,
     label: "4-4 Equal Breathing",
-    blurb: "Symmetric breathing to build concentration, steady energy, and focus.",
+    blurb: "Equal in and out, to help you focus.",
   },
 } as const;
 type PatternKey = keyof typeof PATTERNS;
@@ -43,7 +45,8 @@ function RelaxationPage() {
   const [phase, setPhase] = useState<Phase>("in");
   const [count, setCount] = useState<number>(PATTERNS.box.in);
   const [running, setRunning] = useState(false);
-  const [totalSec, setTotalSec] = useState(0);
+  // Saved per day in the app store, so it survives leaving this page.
+  const totalSec = useStore((s) => s.breathSeconds[todayKey()] ?? 0);
   const [expanded, setExpanded] = useState(false);
 
   // Start every run collapsed, then grow on the next frame so the very first
@@ -61,7 +64,7 @@ function RelaxationPage() {
 
   useEffect(() => {
     if (!running) return;
-    const iv = setInterval(() => setTotalSec((s) => s + 1), 1000);
+    const iv = setInterval(() => bumpBreathSeconds(todayKey(), 1), 1000);
     return () => clearInterval(iv);
   }, [running]);
 
@@ -181,6 +184,8 @@ function RelaxationPage() {
           ▶ {running ? "Pause Exercise" : "Begin Exercise"}
         </button>
       </div>
+
+      <Disclaimer variant="short" className="mt-5" />
     </div>
   );
 }

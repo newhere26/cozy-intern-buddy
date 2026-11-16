@@ -1,3 +1,4 @@
+import { Disclaimer } from "@/components/Disclaimer";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -93,6 +94,7 @@ function ToolsPage() {
           </div>
           <div className="mt-5">
             <ToolBody id={open} />
+            <Disclaimer className="mt-6" />
           </div>
         </div>
       </AppShell>
@@ -133,6 +135,8 @@ function ToolsPage() {
             wide
           />
         </div>
+
+        <Disclaimer className="mt-5" />
       </div>
     </AppShell>
   );

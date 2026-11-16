@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { setNightShiftUntil, useApp } from "@/lib/store";
+import { getState, setNightShiftUntil, todayKey, useApp } from "@/lib/store";
 import { AppShell } from "@/components/AppShell";
 import { Companion } from "@/components/Companion";
 import { CalendarTile } from "@/components/home/CalendarTile";
@@ -36,7 +36,9 @@ function Home() {
 
   useEffect(() => {
     setMounted(true);
-    if (!app.onboarded) nav({ to: "/onboarding" });
+    // Read the real saved state here. `app.onboarded` is still the empty server
+    // default on the first client render, which wrongly sent returning users to onboarding.
+    if (!getState().onboarded) nav({ to: "/onboarding" });
   }, [app.onboarded, nav]);
 
   const isNight = !!app.nightShiftUntil && new Date(app.nightShiftUntil).getTime() > Date.now();
@@ -71,7 +73,7 @@ function Home() {
   const sizeBoost = Math.min(1.2, 1 + Math.floor(completed / 13) * 0.05);
   const heightSvh = 32 * sizeBoost;
 
-  const todayKeyStr = new Date().toISOString().slice(0, 10);
+  const todayKeyStr = todayKey();
   const currentPosting = app.rotations.find(
     (r) => todayKeyStr >= r.start && todayKeyStr <= r.end,
   );
@@ -126,9 +128,7 @@ function Home() {
             >
               <Companion
                 id={app.companion}
-                overlays
                 night={isNight}
-                completedWeeks={completed}
               />
             </button>
           </div>

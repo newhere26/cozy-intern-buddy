@@ -2,7 +2,7 @@
 // Selection is date-seeded so lines feel steady across a day.
 
 import { getState } from "./store";
-import { fullyCompletedWeeks, weeksSince, daysSince } from "./date";
+import { fullyCompletedWeeks, weeksSince, daysSince, toKey } from "./date";
 
 export const DAY_LINES = [
   "Hey. How are you holding up today?",
@@ -114,7 +114,7 @@ export function progressLine(): string {
   const pct = Math.min(100, (done / total) * 100);
   const days = daysSince(s.startDate);
   const dayPct = ((1 / (total * 7)) * 100).toFixed(3);
-  const todayKeyStr = new Date().toISOString().slice(0, 10);
+  const todayKeyStr = toKey(new Date());
   const rotationsDone = s.rotations.filter((r) => r.end < todayKeyStr).length;
 
   const options = [

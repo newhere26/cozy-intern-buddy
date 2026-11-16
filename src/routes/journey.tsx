@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { claimCredits, purchaseArt, setActiveArt, setAnimationsEnabled, useApp } from "@/lib/store";
-import { fmtDate, fullyCompletedWeeks, daysSince } from "@/lib/date";
+import { fmtDate, fullyCompletedWeeks, daysSince, toKey } from "@/lib/date";
 import { postingColor, rotationForDate } from "@/lib/postings";
 import { artImageUrl, galleryFromCache, loadGallery, type ArtPiece } from "@/lib/artic";
 import { PostingReview } from "@/components/PostingReview";
@@ -376,7 +376,7 @@ function ProceduresPanel() {
 
 function PostingsPanel({ expanded }: { expanded: boolean }) {
   const app = useApp();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toKey(new Date());
   const rotations = [...app.rotations].sort((a, b) => a.start.localeCompare(b.start));
   const curIdx = rotations.findIndex((r) => today >= r.start && today <= r.end);
   const anchor = curIdx >= 0 ? curIdx : 0;
@@ -669,7 +669,7 @@ function AnnualRoundupPanel() {
               Dr. {report.internName}'s Roundup
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {[report.college, report.city].filter(Boolean).join(" · ") || "Internship Haven"}
+              {[report.college, report.city].filter(Boolean).join(" · ") || "WithYou"}
             </div>
           </div>
           <Sparkles className="h-6 w-6 text-primary" />

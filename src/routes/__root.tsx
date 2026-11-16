@@ -86,6 +86,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    // Runs before first paint so the saved colours show immediately (no flash of the default).
+    scripts: [
+      {
+        children:
+          "try{var s=JSON.parse(localStorage.getItem('serenity.v1')||'{}');var t=s.theme;if(['sage','lavender','rose','ocean','cocoa','mist'].indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t)}catch(e){}",
+      },
+    ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
@@ -105,7 +112,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" data-theme="sage">
+    <html lang="en" data-theme="sage" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
@@ -120,9 +127,23 @@ function RootShell({ children }: { children: ReactNode }) {
 function ThemeApplier() {
   const theme = useStore((s) => s.theme);
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.documentElement.setAttribute("data-theme", theme);
-    }
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    const apply = () => {
+      if (root.getAttribute("data-theme") !== theme) root.setAttribute("data-theme", theme);
+    };
+    apply();
+    // Something else (a hot reload, the server-rendered default, a re-render of the page
+    // shell) can reset the attribute to "sage". Put the user's chosen colours back at once.
+    const guard = new MutationObserver(apply);
+    guard.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    document.addEventListener("visibilitychange", apply);
+    window.addEventListener("focus", apply);
+    return () => {
+      guard.disconnect();
+      document.removeEventListener("visibilitychange", apply);
+      window.removeEventListener("focus", apply);
+    };
   }, [theme]);
   return null;
 }

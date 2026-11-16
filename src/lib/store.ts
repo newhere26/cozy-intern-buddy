@@ -111,6 +111,10 @@ export interface AppState {
   steps: Record<string, number>;
   workHours: Record<string, WorkHours>;
   stepGoal: number;
+  /** true once the user has allowed motion sensors for automatic step counting */
+  stepTracking: boolean;
+  /** seconds spent in the breathing space, per local day (YYYY-MM-DD) */
+  breathSeconds: Record<string, number>;
   journal: JournalEntry[];
   ratings: Record<string, number>;
   todos: Todo[];
@@ -135,7 +139,10 @@ const defaultState: AppState = {
   country: "India",
   city: "",
   college: "",
-  startDate: new Date().toISOString().slice(0, 10),
+  startDate: (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })(),
   durationWeeks: 54,
   clAllotted: 12,
   plAllotted: 15,
@@ -156,6 +163,8 @@ const defaultState: AppState = {
   steps: {},
   workHours: {},
   stepGoal: 6000,
+  stepTracking: false,
+  breathSeconds: {},
   journal: [],
   ratings: {},
   todos: [],
@@ -266,7 +275,38 @@ export function useApp(): AppState {
 }
 
 // helpers ---------
-export const todayKey = () => new Date().toISOString().slice(0, 10);
+/** Local calendar date (YYYY-MM-DD). Not UTC: in India, UTC would give "yesterday" until 5:30am. */
+export const localDateKey = (d: Date = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+export const todayKey = () => localDateKey();
+
+export function bumpBreathSeconds(date: string, delta: number) {
+  setState((s) => ({
+    breathSeconds: { ...s.breathSeconds, [date]: (s.breathSeconds[date] ?? 0) + delta },
+  }));
+}
+
+/**
+ * For someone who joins after their internship began: fill days that have no
+ * step data yet with an average the user typed in. Real days are never touched.
+ */
+export function backfillSteps(avgPerDay: number) {
+  const s = state;
+  if (!s.startDate || avgPerDay <= 0) return 0;
+  const start = new Date(s.startDate + "T00:00:00");
+  if (Number.isNaN(start.getTime())) return 0;
+  const yesterday = new Date();
+  yesterday.setHours(0, 0, 0, 0);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const patch: Record<string, number> = {};
+  for (const d = new Date(start); d <= yesterday; d.setDate(d.getDate() + 1)) {
+    const key = localDateKey(d);
+    if (s.steps[key] === undefined) patch[key] = Math.round(avgPerDay);
+  }
+  const n = Object.keys(patch).length;
+  if (n > 0) setState((cur) => ({ steps: { ...patch, ...cur.steps } }));
+  return n;
+}
 
 export function setDay(date: string, entry: Partial<DayEntry>) {
   setState((s) => {

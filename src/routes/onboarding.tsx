@@ -6,6 +6,14 @@ import { COMPANIONS, COUNTRIES, THEMES } from "@/lib/data";
 import { Companion } from "@/components/Companion";
 import { cn } from "@/lib/utils";
 import { isLettersOnly, sanitizeInt, sanitizeLetters } from "@/lib/validate";
+import { isValidCity } from "@/lib/cities";
+import { CityCombobox } from "@/components/CityCombobox";
+import {
+  backfillSteps,
+  getState,
+  todayKey,
+} from "@/lib/store";
+import { requestMotionPermission, setStepTracking } from "@/lib/pedometer";
 import { ArrowRight, Footprints } from "lucide-react";
 
 export const Route = createFileRoute("/onboarding")({
@@ -41,7 +49,7 @@ function OnboardingPage() {
 
   const canAdvance = (() => {
     if (step === "profile") return isLettersOnly(app.name);
-    if (step === "place") return isLettersOnly(app.city);
+    if (step === "place") return isValidCity(app.country, app.city);
     if (step === "leaves") return app.clAllotted > 0;
     return true;
   })();
@@ -103,7 +111,11 @@ function OnboardingPage() {
             <label className="text-[11px] text-muted-foreground">Country</label>
             <select
               value={app.country}
-              onChange={(e) => setState({ country: e.target.value })}
+              onChange={(e) => {
+                const country = e.target.value;
+                // a city from the old country is not valid in the new one
+                setState({ country, city: isValidCity(country, app.city) ? app.city : "" });
+              }}
               className="mt-1 mb-3 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
             >
               {COUNTRIES.map((c) => (
@@ -111,15 +123,13 @@ function OnboardingPage() {
               ))}
             </select>
             <label className="text-[11px] text-muted-foreground">City (required)</label>
-            <input
-              value={app.city}
-              onChange={(e) => setState({ city: sanitizeLetters(e.target.value) })}
-              placeholder="e.g. Kolkata"
-              className="mt-1 mb-3 w-full rounded-full border border-border bg-card px-4 py-3 text-base"
-            />
-            {!isLettersOnly(app.city) && app.city.length > 0 && (
-              <p className="mb-2 text-[11px] text-destructive">Only letters allowed.</p>
-            )}
+            <div className="mb-3">
+              <CityCombobox
+                country={app.country}
+                value={app.city}
+                onChange={(city) => setState({ city })}
+              />
+            </div>
             <label className="text-[11px] text-muted-foreground">Medical college (optional)</label>
             <input
               value={app.college}
@@ -228,52 +238,7 @@ function OnboardingPage() {
           </Field>
         )}
 
-        {step === "steps" && (
-          <Field
-            label="Ward Footsteps & Movement"
-            hint="Hospital duty involves miles of walking between casualty, OT, and wards. We track this for your monthly and annual roundup."
-          >
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-primary/25 bg-secondary/40 p-4">
-                <div className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
-                  <Footprints className="h-5 w-5 text-primary" />
-                  <span>Sync Device Step Counter</span>
-                </div>
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                  Allow Intern Haven to connect to your device's step counter so we can celebrate your walking milestones in your duty roundups.
-                </p>
-
-                <div className="mt-4 flex flex-col gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setState({ stepGoal: 6000 });
-                      next();
-                    }}
-                    className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-xs font-semibold text-primary-foreground shadow-xs transition-transform active:scale-95"
-                  >
-                    <Footprints className="h-4 w-4" />
-                    <span>Connect Phone Step Tracker</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      next();
-                    }}
-                    className="w-full rounded-full border border-border bg-background py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground active:scale-95"
-                  >
-                    Skip · I'll log steps manually
-                  </button>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-border/40 bg-card/60 p-3.5 text-[11px] leading-relaxed text-muted-foreground">
-                🔒 <strong className="text-foreground">Privacy Note:</strong> Your activity data is stored in your personal, encrypted account strictly to generate your private reflections and roundups. It is never shared with third parties or advertisers.
-              </div>
-            </div>
-          </Field>
-        )}
+        {step === "steps" && <StepsStep onNext={next} />}
 
         {step === "theme" && (
           <Field label="Pick a mood" hint="You can change this any time.">
@@ -339,6 +304,133 @@ function OnboardingPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+type SyncStatus = "idle" | "asking" | "granted" | "denied" | "unsupported";
+
+function StepsStep({ onNext }: { onNext: () => void }) {
+  const [status, setStatus] = useState<SyncStatus>("idle");
+  const [avg, setAvg] = useState("");
+  const [filled, setFilled] = useState<number | null>(null);
+  const startDate = useApp().startDate;
+  const today = todayKey();
+  const alreadyStarted = startDate < today;
+
+  const connect = async () => {
+    setStatus("asking");
+    // Called straight from the tap, so the phone is allowed to show its permission prompt.
+    const result = await requestMotionPermission();
+    if (result === "granted") {
+      setStepTracking(true);
+      setState({ stepGoal: getState().stepGoal || 6000 });
+    }
+    setStatus(result);
+  };
+
+  const applyBackfill = () => {
+    const n = backfillSteps(Number(sanitizeInt(avg)) || 0);
+    setFilled(n);
+  };
+
+  return (
+    <Field
+      label="Ward Footsteps & Movement"
+      hint="Hospital duty involves miles of walking between casualty, OT, and wards. We track this for your monthly and annual roundup."
+    >
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-primary/25 bg-secondary/40 p-4">
+          <div className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
+            <Footprints className="h-5 w-5 text-primary" />
+            <span>Sync Device Step Counter</span>
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+            Allow WithYou to connect to your device's step counter so we can celebrate your walking
+            milestones in your duty roundups.
+          </p>
+
+          <div className="mt-4 flex flex-col gap-2.5">
+            {status !== "granted" && (
+              <button
+                type="button"
+                disabled={status === "asking"}
+                onClick={connect}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-xs font-semibold text-primary-foreground shadow-xs transition-transform active:scale-95 disabled:opacity-60"
+              >
+                <Footprints className="h-4 w-4" />
+                <span>{status === "asking" ? "Waiting for your phone…" : "Connect Phone Step Tracker"}</span>
+              </button>
+            )}
+
+            {status === "granted" && (
+              <p className="rounded-xl bg-primary/10 px-3 py-2 text-xs text-foreground">
+                Connected. WithYou now counts your steps from your phone's motion sensor while the app is open.
+              </p>
+            )}
+            {status === "denied" && (
+              <p className="text-[11px] text-destructive">
+                Permission was declined. You can allow motion access in your browser or phone settings and try again, or log steps manually.
+              </p>
+            )}
+            {status === "unsupported" && (
+              <p className="text-[11px] text-muted-foreground">
+                This device or browser doesn't share its step sensor with web apps. You can log steps manually any time.
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={onNext}
+              className={
+                status === "granted"
+                  ? "w-full rounded-full bg-primary py-2.5 text-xs font-semibold text-primary-foreground active:scale-95"
+                  : "w-full rounded-full border border-border bg-background py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground active:scale-95"
+              }
+            >
+              {status === "granted" ? "Continue" : "Skip · I'll log steps manually"}
+            </button>
+          </div>
+        </div>
+
+        {alreadyStarted && (
+          <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+            <div className="text-xs font-semibold text-foreground">Already started your internship?</div>
+            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+              Phones don't let web apps read past step history, so tell us roughly how many steps you walk on a
+              typical day and we'll fill in the days since you started. Any day you've already logged is left alone.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <input
+                inputMode="numeric"
+                value={avg}
+                onChange={(e) => setAvg(sanitizeInt(e.target.value))}
+                placeholder="avg steps per day"
+                className="min-w-0 flex-1 rounded-full border border-border bg-card px-4 py-2 text-sm"
+              />
+              <button
+                type="button"
+                disabled={!Number(avg)}
+                onClick={applyBackfill}
+                className="rounded-full bg-secondary px-4 py-2 text-xs font-semibold text-secondary-foreground disabled:opacity-50"
+              >
+                Fill in
+              </button>
+            </div>
+            {filled !== null && (
+              <p className="mt-2 text-[11px] text-primary">
+                {filled > 0 ? `Added an estimate for ${filled} days.` : "Nothing to add. Those days already have steps."}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="rounded-2xl border border-border/40 bg-card/60 p-3.5 text-[11px] leading-relaxed text-muted-foreground">
+          🔒 <strong className="text-foreground">Privacy Note:</strong> Your activity data is stored in your
+          personal, encrypted account strictly to generate your private reflections and roundups. It is never
+          shared with third parties or advertisers.
+        </div>
+      </div>
+    </Field>
   );
 }
 

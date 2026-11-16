@@ -4,7 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Serenity — cozy dark pastel design system.
+/* WithYou — cozy dark pastel design system.
  * Six themes selected during onboarding via [data-theme] on <html>.
  * All colors oklch. Never hardcode colors in components.
  */
